@@ -1,0 +1,12 @@
+* text=false
+
+*.bin binary
+*.evt binary
+*.evp binary
+*.rlc binary
+*.rls binary
+*.pat binary
+*.lzp binary
+*.rlp binary
+*.lzc binary
+*.lzs binary

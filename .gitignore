@@ -1,0 +1,21 @@
+# build output
+kof95.gb
+kof95.map
+kof95.o
+kof95.sym
+kof95.sn*
+
+# provide your own comparision rom
+original_jp.gb
+original_jp.link
+original_jp.sym
+
+# not necessary
+tempconv.txt
+tempconv.bin
+tempconv.asm
+tempconv.sym
+shell.lnk
+temp
+.cdl
+.sound_split
