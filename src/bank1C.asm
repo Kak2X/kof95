@@ -338,11 +338,19 @@ Win_ChkNormEndingCutscene:
 	; Omega Rugal dies
 	ld   b, BANK(SubModule_CutsceneRugalDefeat) ; BANK $03
 	ld   hl, SubModule_CutsceneRugalDefeat
+IF REV_VER == 96
+	nop ; [POI] The fake 96 disables all cutscenes.
+ELSE
 	rst  $08
+ENDC
 	; Ending text
 	ld   b, BANK(SubModule_CutsceneEpilogue) ; BANK $0A
 	ld   hl, SubModule_CutsceneEpilogue
+IF REV_VER == 96
+	nop
+ELSE
 	rst  $08
+ENDC
 	; Show win screen
 	call Win_DoWinScr
 	; Show the credits
@@ -370,11 +378,33 @@ Win_ChkNormEndingCutscene:
 ; Tries to display the non-ending cutscene in 1P mode.
 Win_ChkCutsceneSingle:
 
+MACRO mNoCutscene
+	nop
+	nop
+	nop
+ENDM
+	
 	; Team mode is handled separately, as it uses copy/pasted code with minor edits.
 	ld   a, [wPlayMode]
 	bit  MODEB_TEAM, a						; Playing in Team mode?
 	jp   nz, Win_ChkCutsceneTeam			; If so, jump
 	
+IF REV_VER == 96
+	; [POI] The cutscene disabling causes the boss rounds to malfunction!
+	;       They were never meant to go through the character select random picker.
+	ld   a, [wCharSeqId]
+	cp   STAGESEQ_SAISYU
+	mNoCutscene
+	cp   STAGESEQ_RUGAL
+	mNoCutscene
+	; This one needs to stay, because the credits must show up.
+	cp   STAGESEQ_RUGAL+1					; Did we just defeat RUGAL? (only in HARD mode we get here)
+	jp   z, Win_RugalDefeatCutsceneSingle	; If so, jump
+	cp   $05
+	mNoCutscene
+	cp   $0A
+	mNoCutscene
+ELSE
 	; Display cutscenes on...
 	ld   a, [wCharSeqId]
 	cp   STAGESEQ_SAISYU					; Is SAISYU's stage next?
@@ -387,6 +417,8 @@ Win_ChkCutsceneSingle:
 	jp   z, Win_Int0Cutscene				; If so, jump
 	cp   $0A								; Second cutscene reached?
 	jp   z, Win_Int1Cutscene				; If so, jump
+ENDC
+
 .norm:
 	; No cutscene on this round, continue as normal.
 	call Win_DoWinScr
@@ -421,11 +453,19 @@ Win_RugalDefeatCutsceneSingle:
 	; Omega Rugal dies
 	ld   b, BANK(SubModule_CutsceneRugalDefeat) ; BANK $03
 	ld   hl, SubModule_CutsceneRugalDefeat
+IF REV_VER == 96
+	nop
+ELSE
 	rst  $08
+ENDC
 	; Ending text
 	ld   b, BANK(SubModule_CutsceneEpilogue) ; BANK $0A
 	ld   hl, SubModule_CutsceneEpilogue
+IF REV_VER == 96
+	nop
+ELSE
 	rst  $08
+ENDC
 	; Show win screen
 	call Win_DoWinScr
 	; Show the credits
@@ -454,6 +494,20 @@ Win_StartSpecRoundSingle:
 ; See also: Win_ChkCutsceneSingle
 Win_ChkCutsceneTeam:
 
+IF REV_VER == 96
+	ld   a, [wCharSeqId]
+	cp   STAGESEQ_SAISYU
+	mNoCutscene
+	cp   STAGESEQ_RUGAL
+	mNoCutscene
+	; This one needs to stay, because the credits must show up.
+	cp   STAGESEQ_RUGAL+1					; Did we just defeat RUGAL? (only in HARD mode we get here)
+	jp   z, Win_RugalDefeatCutsceneTeam		; If so, jump
+	cp   $06
+	mNoCutscene
+	cp   $0C
+	mNoCutscene
+ELSE
 	; Display cutscenes on...
 	ld   a, [wCharSeqId]
 	cp   STAGESEQ_SAISYU					; Is SAISYU's stage next?
@@ -466,6 +520,8 @@ Win_ChkCutsceneTeam:
 	jp   z, Win_Int0Cutscene				; If so, jump
 	cp   $0C								; Second cutscene reached?
 	jp   z, Win_Int1Cutscene				; If so, jump
+ENDC
+
 .norm:
 	; No cutscene on this round, continue as normal.
 	call Win_DoWinScr
@@ -512,11 +568,19 @@ Win_RugalDefeatCutsceneTeam:
 	; Omega Rugal dies
 	ld   b, BANK(SubModule_CutsceneRugalDefeat) ; BANK $03
 	ld   hl, SubModule_CutsceneRugalDefeat
+IF REV_VER == 96
+	nop
+ELSE
 	rst  $08
+ENDC
 	; Ending text
 	ld   b, BANK(SubModule_CutsceneEpilogue) ; BANK $0A
 	ld   hl, SubModule_CutsceneEpilogue
+IF REV_VER == 96
+	nop
+ELSE
 	rst  $08
+ENDC
 	; Show win screen
 	call Win_DoWinScr
 	; Show the credits

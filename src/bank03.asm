@@ -2032,15 +2032,34 @@ ProjC_Terry_PowerGeyser:
 		call OBJLstS_Hide
 		ret 
 	
+IF REV_VER == 96
+GFXDef_Play_Stage_03: mGfxDef "data/gfx/96f/play_stage_03.bin"
+BG_Play_Stage_03: INCBIN "data/bg/96f/play_stage_03.bin"
+BG_Play_Stage_03_Unused: INCBIN "data/bg/96f/play_stage_03_unused.bin"
+ELSE
 GFXDef_Play_Stage_03: mGfxDef "data/gfx/play_stage_03.bin"
 BG_Play_Stage_03: INCBIN "data/bg/play_stage_03.bin"
 BG_Play_Stage_03_Unused: INCBIN "data/bg/play_stage_03_unused.bin"
+ENDC
+
 
 ; 
 ; =============== START OF MODULE Win/Cutscene ===============
 ;
 
+IF REV_VER == 96
+	; [POI] GFXDef_Cutscene_Rugal is a bit fucked in the fake 96.
+	;       BG_Play_Stage_03_Unused is 16 bytes longer than it should be, shifting the rest down.
+	;       Those 16 bytes (1 tile) are reclaimed from the middle of cutscene_rugal.bin"
+GFXDef_Cutscene_Rugal:
+	INCBIN "data/bg/96f/play_stage_03_unused_2.bin"
+	db (.end-.bin+TILESIZE)/TILESIZE ; Same as the original
+.bin:
+	INCBIN "data/gfx/96f/cutscene_rugal.bin"
+.end:
+ELSE
 GFXDef_Cutscene_Rugal: mGfxDef "data/gfx/cutscene_rugal.bin"
+ENDC
 BG_Cutscene_Rugal: INCBIN "data/bg/cutscene_rugal.bin"
 GFXDef_Cutscene_Saisyu: mGfxDef "data/gfx/cutscene_saisyu.bin"
 BG_Cutscene_Saisyu: INCBIN "data/bg/cutscene_saisyu.bin"

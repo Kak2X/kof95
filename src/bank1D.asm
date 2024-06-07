@@ -2,9 +2,15 @@
 ; =============== START OF MODULE Intro ===============
 ;
 
+IF REV_VER == 96
+GFXDef_Intro_KofLogo: mGfxDef "data/gfx/96f/intro_koflogo.bin"
+	; Unused, partial duplicate of GFXDef_Intro_KyoBG0
+	mIncJunk "../padding_96f/L1D44F1"
+ELSE
 GFXDef_Intro_Letter: mGfxDef "data/gfx/intro_letter.bin"
 BG_Intro_Letter: INCBIN "data/bg/intro_letter.bin"	
 GFXDef_Intro_Font: mGfxDef "data/gfx/intro_font.bin"
+ENDC
 
 PUSHC
 SETCHARMAP intro
@@ -31,11 +37,30 @@ Text_Intro4:
 	db "            "
 POPC
 
+IF REV_VER == 96
+; GFXDef_Intro_KyoBG0 replaces GFXDef_IntroBG0.
+; The second part is at the end of the bank, replacing end of bank junk data.
+GFXDef_Intro_KyoBG0: mGfxDef "data/gfx/96f/intro_kyo_bg0.bin"
+ELSE
 GFXDef_IntroBG0: mGfxDef "data/gfx/intro_bg0.bin"
+ENDC
 GFXDef_IntroBG1: mGfxDef "data/gfx/intro_bg1.bin"
+
+IF REV_VER == 96
+; BG_Intro_KofLogo replaces BG_Intro_Sun.
+BG_Intro_Sun: ; Replaced by BG_Intro_KofLogo
+BG_Intro_KofLogo: INCBIN "data/bg/96f/intro_koflogo.bin"
+	; As the new tilemap is smaller than the older one, the remaining space is filled by an unused half copy of BG_Intro_Kyo.
+	mIncJunk "../padding_96f/L1D5428"
+; BG_Intro_Kyo replaces BG_Intro_Moon
+BG_Intro_Kyo: INCBIN "data/bg/96f/intro_kyo.bin"
+ELSE
 BG_Intro_Sun: INCBIN "data/bg/intro_sun.bin"
 BG_Intro_Moon: INCBIN "data/bg/intro_moon.bin"
+ENDC
+
 BG_Intro_Logo: INCBIN "data/bg/intro_logo.bin"
+
 GFXDef_IntroOBJ: mGfxDef "data/gfx/intro_obj.bin"
 
 ; =============== Module_Intro ===============
@@ -76,6 +101,30 @@ Module_Intro:
 	ld   [wOBJScrollX], a
 	ld   [wOBJScrollY], a
 	
+IF REV_VER == 96
+	; Load VRAM for the KOF logo
+	ld   hl, GFXDef_Intro_KofLogo
+	ld   de, $9000
+	call CopyTilesAutoNum
+	
+	;--
+	; What's left of the GFXDef_Intro_Font load
+	nop
+	nop
+	nop
+	ld   de, $9400
+	nop
+	nop
+	nop
+	;--
+	
+	ld   de, BG_Intro_KofLogo
+	ld   hl, $9800
+	ld   b, $14
+	ld   c, $0D
+	call CopyBGToRect
+	
+ELSE
 	; Load VRAM for the intro text
 	ld   hl, GFXDef_Intro_Letter
 	ld   de, $9000
@@ -88,6 +137,7 @@ Module_Intro:
 	ld   b, $0A
 	ld   c, $06
 	call CopyBGToRect
+ENDC
 	
 	;--
 	; [TCRF] Two slots are initialized with otherwise unused sprite mappings tables, but are hidden.
@@ -117,13 +167,17 @@ Module_Intro:
 	
 	ei   
 	
+IF REV_VER == 96
+	; Fake 96 cuts the wait in half
+	ld   b, 28
+ELSE
 	; Wait 1 second
 	ld   b, 60
+ENDC
 .wait0:
 	call Task_PassControl_NoDelay
 	dec  b
 	jp   nz, .wait0
-	
 	
 	; Set DMG pal
 	ld   a, $3F
@@ -138,11 +192,19 @@ Module_Intro:
 	ld   [wIntroActPtr_High], a
 	ld   [wIntroActPtr_Low], a
 	
-	;--
+IF REV_VER == 96
+	; Wait 92 frames at the KOF logo, don't cut the title screen when aborting early
+	ld   bc, $5C
+	call Intro_Delay
+	nop
+	nop
+	nop
+ELSE
 	; Wait 1 second
 	ld   bc, 60
 	call Intro_Delay
 	jp   c, .end
+ENDC
 	
 	; Play Intro BGM
 	ld   a, BGM_INTRO
@@ -152,7 +214,12 @@ Module_Intro:
 	; Wait 30 frames
 	ld   bc, $001E
 	call Intro_Delay
+IF REV_VER == 96
+	; Text printing skipped
+	jp   SubModule_Intro_Chars
+ELSE
 	jp   c, .end
+ENDC
 	
 	;---
 	
@@ -388,19 +455,34 @@ SubModule_Intro_Chars:
 	ld   hl, GFXDef_IntroOBJ	; Kyo/Iori sprites
 	ld   de, $8000
 	call CopyTilesAutoNum
+	
+IF REV_VER == 96
+	ld   hl, GFXDef_Intro_KyoBG0	; Backgrounds, logo
+	ld   de, $9000
+	call CopyTilesAutoNum
+	ld   hl, GFXDef_Intro_KyoBG1	; Second part of logo
+	ld   de, $8800
+	call CopyTilesAutoNum
+ELSE
 	ld   hl, GFXDef_IntroBG0	; Backgrounds, logo
 	ld   de, $9000
 	call CopyTilesAutoNum
 	ld   hl, GFXDef_IntroBG1	; Second part of logo
 	ld   de, $8800
 	call CopyTilesAutoNum
+ENDC
+
 	
 	ld   de, BG_Intro_Sun		; Kyo BG on the top
 	ld   hl, $9800
 	ld   b, $20
 	ld   c, $10
 	call CopyBGToRect
+IF REV_VER == 96
+	ld   de, BG_Intro_Kyo		; Crusty Kyo
+ELSE
 	ld   de, BG_Intro_Moon		; Iori BG on the bottom
+ENDC
 	ld   hl, $9A00
 	ld   b, $20
 	ld   c, $10
@@ -555,8 +637,14 @@ IntroAct_KyoMvLeft:
 	ld   hl, hScrollX
 	ld   a, [hl]
 	cp   $80			; Reached the target already? (hScrollX >= $80)
+IF REV_VER == 96
+	; Skip this entirely in the fake 96.
+	; Immediately switch to the Iori mode, which has a crusty Kyo move to the right.
+	jp   IntroAct_IoriMvRightInit
+ELSE
 	jp   nc, .mvObj		; If so, skip
-	
+ENDC
+
 	ld   hl, hScrollX	; DE = hScrollX
 	ld   d, [hl]
 	inc  hl
@@ -710,7 +798,12 @@ IntroAct_IoriMvRight:
 	push de					; DE += 1px
 	pop  hl
 	ld   bc, +$0100
+IF REV_VER == 96
+	; Fake 96 keeps Iori off-screen, only moving the background (Kyo).
+	nop
+ELSE
 	add  hl, bc
+ENDC
 	push hl
 	pop  de
 	
@@ -741,7 +834,11 @@ IntroAct_IoriWait:
 	ld   a, [wIntroActTimer]
 	inc  a
 	ld   [wIntroActTimer], a
+IF REV_VER == 96
+	cp   $A0 ; Significantly more in fake 96
+ELSE
 	cp   $32
+ENDC
 	jr   z, .next
 	xor  a
 	ret  
@@ -765,7 +862,12 @@ IntroAct_Logo:
 	; Next subscene after 10 * 3 * 2 frames
 	ld   a, [wIntroActTimer]
 	cp   $0A
+IF REV_VER == 96
+	; Fake 96 ends it early.
+	jp   Intro_SwitchToTitle
+ELSE
 	jp   z, .ioriLogo
+ENDC
 	inc  a
 	ld   [wIntroActTimer], a
 
@@ -1045,12 +1147,23 @@ Title_LoadVRAM_Mini:
 	ld   de, $9000
 	call CopyTilesHBlankAutoNum
 	ret  
-	
+
+IF REV_VER == 96
+; Altered
+GFXDef_Title_Logo0: mGfxDef "data/gfx/96f/title_logo0.bin"
+GFXDef_Title_Logo1: mGfxDef "data/gfx/96f/title_logo1.bin"
+BG_Title_Logo: INCBIN "data/bg/96f/title_logo.bin"
+; Remapped blank tiles from $01 to $00 due to graphical differences
+BG_Title_Clouds: INCBIN "data/bg/96f/title_clouds.bin"
+; Copyright year changed to 1996
+GFXDef_TitleOBJ: mGfxDef "data/gfx/96f/title_obj.bin"
+ELSE
 GFXDef_Title_Logo0: mGfxDef "data/gfx/title_logo0.bin"
 GFXDef_Title_Logo1: mGfxDef "data/gfx/title_logo1.bin"
 BG_Title_Logo: INCBIN "data/bg/title_logo.bin"
 BG_Title_Clouds: INCBIN "data/bg/title_clouds.bin"
 GFXDef_TitleOBJ: mGfxDef "data/gfx/title_obj.bin"
+ENDC	
 
 Play_ColiBoxTbl: 
 	db $00,$00,$00,$00 ; $00
@@ -1133,6 +1246,16 @@ ENDR
 	jp   nz, .loop		; If not, loop
 	ret
 	
+IF REV_VER == 96
+; Second part of the Crusty Kyo graphics, replacing the repeating junk pattern
+GFXDef_Intro_KyoBG1: mGfxDef "data/gfx/96f/intro_kyo_bg1.bin"
+; =============== END OF BANK ===============
+; Partial duplicate of GFXDef_Intro_KyoBG1 below
+	mIncJunk "../padding_96f/L1D7F8F"
+ELSE
+
 ; =============== END OF BANK ===============
 ; Junk area below.
 	mIncJunk "L1D7A8E"
+ENDC
+

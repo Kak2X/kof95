@@ -556,10 +556,18 @@ Title_Mode_ModeSelect:
 .chkAct:
 	cp   MODESELECT_ACT_EXIT
 	jp   z, TitleSubMenu_Exit
+IF REV_VER == 96
+	; Fake 96 switches the two strings around
+	cp   MODESELECT_ACT_TEAM1P
+	jp   z, .single1P
+	cp   MODESELECT_ACT_SINGLE1P
+	jp   z, .team1P
+ELSE
 	cp   MODESELECT_ACT_SINGLE1P
 	jp   z, .single1P
 	cp   MODESELECT_ACT_TEAM1P
 	jp   z, .team1P
+ENDC
 	cp   MODESELECT_ACT_SINGLEVS
 	jp   z, .singleVS
 	cp   MODESELECT_ACT_TEAMVS
@@ -1808,8 +1816,15 @@ Title_UpdateParallaxCoords:
 	
 	ld   hl, -$0040		; DE -= $00.40
 	add  hl, de
+IF REV_VER == 96
+	; The cloud layer doesn't scroll here, DE stays the same
+	nop
+	nop
+ELSE
 	push hl
 	pop  de
+ENDC
+
 	
 	ld   hl, hScrollX	; hScrollX = DE
 	ld   [hl], d
@@ -1915,12 +1930,24 @@ INCLUDE "data/objlst/title.asm"
 TextDef_Menu_Title:
 	dw $98C4
 	mTxtDef "GAME SELECT"
+	
+; Fake 96 switches around the two strings, and alters the code to account for it. (see Title_Mode_ModeSelect)
 TextDef_Menu_SinglePlay:
 	dw $9924
+IF REV_VER == 96
+	mTxtDef "TEAM PLAY"
+ELSE
 	mTxtDef "SINGLE PLAY"
+ENDC
+
 TextDef_Menu_TeamPlay:
 	dw $9964
+IF REV_VER == 96
+	mTxtDef "SINGLE PLAY"
+ELSE
 	mTxtDef "TEAM PLAY"
+ENDC
+
 TextDef_Menu_SingleVS: 
 	dw $99A4
 	mTxtDef "SINGLE VS"
@@ -2037,9 +2064,18 @@ SGBPacket_Options_StopSnd:
 ;
 
 GFXDef_CharSel_BG0: mGfxDef "data/gfx/charsel_bg0.bin"
+
+IF REV_VER == 96
+; Altered cross and placeholder slots
+GFXDef_CharSel_BG1: mGfxDef "data/gfx/96f/charsel_bg1.bin"
+GFXDef_CharSel_Cross: mGfxDef "data/gfx/96f/charsel_cross.bin"
+GFX_CharSel_Cross_Mask: INCBIN "data/gfx/96f/charsel_cross_mask.bin"
+ELSE
 GFXDef_CharSel_BG1: mGfxDef "data/gfx/charsel_bg1.bin"
 GFXDef_CharSel_Cross: mGfxDef "data/gfx/charsel_cross.bin"
 GFX_CharSel_Cross_Mask: INCBIN "data/gfx/charsel_cross_mask.bin"
+ENDC
+
 GFXDef_CharSel_OBJ: mGfxDef "data/gfx/charsel_obj.bin"
 
 OBJInfoInit_CharSel_Cursor: 
@@ -3840,7 +3876,13 @@ CharSel_PrintCharName:
 			; Blank out the old name
 			push bc
 				ld   hl, TextC_Char_None
+			IF REV_VER == 96
+				; [BUG] The fake 96 targets the next row by mistake
+				ld   de, BG_CHARSEL_P2NAME-$07+BG_TILECOUNT_H
+			ELSE
 				ld   de, BG_CHARSEL_P2NAME-$07
+			ENDC
+				
 				call TextPrinter_Instant_CustomPos
 			pop  bc
 			
@@ -3916,47 +3958,57 @@ CharSel_PrintCharName:
 ; =============== CharSel_CursorPosTable ===============
 ; Maps character IDs to cursor sprite positions.
 CharSel_CursorPosTable:
-	db $00,$00 ; CHAR_ID_KYO     
-	db $18,$00 ; CHAR_ID_BENIMARU
-	db $30,$00 ; CHAR_ID_RYO     
-	db $48,$00 ; CHAR_ID_YURI    
-	db $60,$00 ; CHAR_ID_TERRY   
-	db $78,$00 ; CHAR_ID_JOE     
-	db $00,$18 ; CHAR_ID_HEIDERN 
-	db $18,$18 ; CHAR_ID_RALF    
-	db $30,$18 ; CHAR_ID_ATHENA  
-	db $48,$18 ; CHAR_ID_KENSOU  
-	db $60,$18 ; CHAR_ID_KIM     
-	db $78,$18 ; CHAR_ID_MAI     
-	db $00,$30 ; CHAR_ID_IORI    
-	db $18,$30 ; CHAR_ID_EIJI    
-	db $30,$30 ; CHAR_ID_BILLY   
-	db $48,$30 ; CHAR_ID_SAISYU  
-	db $60,$30 ; CHAR_ID_RUGAL   
-	db $78,$30 ; CHAR_ID_NAKORURU
+IF REV_VER == 96
+YOFFSET = $28 ; Shifted down
+ELSE
+YOFFSET = 0
+ENDC
+	db $00,$00+YOFFSET ; CHAR_ID_KYO     
+	db $18,$00+YOFFSET ; CHAR_ID_BENIMARU
+	db $30,$00+YOFFSET ; CHAR_ID_RYO     
+	db $48,$00+YOFFSET ; CHAR_ID_YURI    
+	db $60,$00+YOFFSET ; CHAR_ID_TERRY   
+	db $78,$00+YOFFSET ; CHAR_ID_JOE     
+	db $00,$18+YOFFSET ; CHAR_ID_HEIDERN 
+	db $18,$18+YOFFSET ; CHAR_ID_RALF    
+	db $30,$18+YOFFSET ; CHAR_ID_ATHENA  
+	db $48,$18+YOFFSET ; CHAR_ID_KENSOU  
+	db $60,$18+YOFFSET ; CHAR_ID_KIM     
+	db $78,$18+YOFFSET ; CHAR_ID_MAI     
+	db $00,$30+YOFFSET ; CHAR_ID_IORI    
+	db $18,$30+YOFFSET ; CHAR_ID_EIJI    
+	db $30,$30+YOFFSET ; CHAR_ID_BILLY   
+	db $48,$30+YOFFSET ; CHAR_ID_SAISYU  
+	db $60,$30+YOFFSET ; CHAR_ID_RUGAL   
+	db $78,$30+YOFFSET ; CHAR_ID_NAKORURU
 	
 ; =============== CharSel_CharNameBGPtrTbl ===============
 ; Ptr table to the starting tilemap positions on 2P side, indexed by character ID.
 ; The pointer for each character should always be equal to $99B3-(name length).
 CharSel_CharNameBGPtrTbl:
-	dw $99B0 ; CHAR_ID_KYO     
-	dw $99AB ; CHAR_ID_BENIMARU
-	dw $99B0 ; CHAR_ID_RYO     
-	dw $99AF ; CHAR_ID_YURI    
-	dw $99AE ; CHAR_ID_TERRY   
-	dw $99B0 ; CHAR_ID_JOE     
-	dw $99AC ; CHAR_ID_HEIDERN 
-	dw $99AF ; CHAR_ID_RALF    
-	dw $99AD ; CHAR_ID_ATHENA  
-	dw $99AD ; CHAR_ID_KENSOU  
-	dw $99B0 ; CHAR_ID_KIM     
-	dw $99B0 ; CHAR_ID_MAI     
-	dw $99AF ; CHAR_ID_IORI    
-	dw $99AF ; CHAR_ID_EIJI    
-	dw $99AE ; CHAR_ID_BILLY   
-	dw $99AD ; CHAR_ID_SAISYU  
-	dw $99AE ; CHAR_ID_RUGAL   
-	dw $99AB ; CHAR_ID_NAKORURU
+IF REV_VER == 96
+TOFFSET = -(BG_TILECOUNT_H*7) ; Shifted up 7 tiles
+ELSE
+TOFFSET = 0
+ENDC
+	dw $99B0+TOFFSET ; CHAR_ID_KYO     
+	dw $99AB+TOFFSET ; CHAR_ID_BENIMARU
+	dw $99B0+TOFFSET ; CHAR_ID_RYO     
+	dw $99AF+TOFFSET ; CHAR_ID_YURI    
+	dw $99AE+TOFFSET ; CHAR_ID_TERRY   
+	dw $99B0+TOFFSET ; CHAR_ID_JOE     
+	dw $99AC+TOFFSET ; CHAR_ID_HEIDERN 
+	dw $99AF+TOFFSET ; CHAR_ID_RALF    
+	dw $99AD+TOFFSET ; CHAR_ID_ATHENA  
+	dw $99AD+TOFFSET ; CHAR_ID_KENSOU  
+	dw $99B0+TOFFSET ; CHAR_ID_KIM     
+	dw $99B0+TOFFSET ; CHAR_ID_MAI     
+	dw $99AF+TOFFSET ; CHAR_ID_IORI    
+	dw $99AF+TOFFSET ; CHAR_ID_EIJI    
+	dw $99AE+TOFFSET ; CHAR_ID_BILLY   
+	dw $99AD+TOFFSET ; CHAR_ID_SAISYU  
+	dw $99AE+TOFFSET ; CHAR_ID_RUGAL   
+	dw $99AB+TOFFSET ; CHAR_ID_NAKORURU
 	
 ; =============== CharSel_CharNamePtrTable ===============
 ; Ptr table to the character names, indexed by character ID.
@@ -4200,7 +4252,12 @@ CharSel_DrawUnlockedChars:
 
 	; Nakoruru is only drawn when the "All Characters" dip switch is set
 	ld   a, b
+IF REV_VER == 96
+	; Fake 96 draws all characters by causing the check to always fail, same for the bosses.
+	cp   $18
+ELSE
 	cp   CHAR_ID_NAKORURU/2		; Trying to draw Nakoruru's portrait?
+ENDC
 	jp   z, .chkUnlockNakoruru	; If so, jump
 	jp   .chkBoss
 .chkUnlockNakoruru:
@@ -4213,9 +4270,19 @@ CharSel_DrawUnlockedChars:
 	jp   .nextChar
 .chkBoss:;J
 	ld   a, b
+	
+IF REV_VER == 96
+	cp   $18
+ELSE
 	cp   CHAR_ID_SAISYU/2		; Trying to draw Saisyu's portrait?
+ENDC
 	jp   z, .chkUnlockBoss		; If so, jump
+	
+IF REV_VER == 96
+	cp   $18
+ELSE
 	cp   CHAR_ID_RUGAL/2		; Trying to Rugal's Saisyu's portrait?
+ENDC
 	jp   z, .chkUnlockBoss		; If so, jump
 	jp   .charOk				; Everything else can be drawn
 .chkUnlockBoss:
@@ -4288,24 +4355,29 @@ CharSel_DrawUnlockedChars:
 ; Portraits are 3 tiles wide and 3 tiles high, and their origin is the top-left tile.
 ;
 CharSel_IdBGMapTbl:
-	dw $9861 ; CHAR_ID_KYO     
-	dw $9864 ; CHAR_ID_BENIMARU
-	dw $9867 ; CHAR_ID_RYO     
-	dw $986A ; CHAR_ID_YURI    
-	dw $986D ; CHAR_ID_TERRY   
-	dw $9870 ; CHAR_ID_JOE     
-	dw $98C1 ; CHAR_ID_HEIDERN 
-	dw $98C4 ; CHAR_ID_RALF    
-	dw $98C7 ; CHAR_ID_ATHENA  
-	dw $98CA ; CHAR_ID_KENSOU  
-	dw $98CD ; CHAR_ID_KIM     
-	dw $98D0 ; CHAR_ID_MAI     
-	dw $9921 ; CHAR_ID_IORI    
-	dw $9924 ; CHAR_ID_EIJI    
-	dw $9927 ; CHAR_ID_BILLY   
-	dw $992A ; CHAR_ID_SAISYU  
-	dw $992D ; CHAR_ID_RUGAL   
-	dw $9930 ; CHAR_ID_NAKORURU
+IF REV_VER == 96
+TOFFSET = BG_TILECOUNT_H*5 ; 5 tiles down
+ELSE
+TOFFSET = 0
+ENDC
+	dw $9861+TOFFSET ; CHAR_ID_KYO     
+	dw $9864+TOFFSET ; CHAR_ID_BENIMARU
+	dw $9867+TOFFSET ; CHAR_ID_RYO     
+	dw $986A+TOFFSET ; CHAR_ID_YURI    
+	dw $986D+TOFFSET ; CHAR_ID_TERRY   
+	dw $9870+TOFFSET ; CHAR_ID_JOE     
+	dw $98C1+TOFFSET ; CHAR_ID_HEIDERN 
+	dw $98C4+TOFFSET ; CHAR_ID_RALF    
+	dw $98C7+TOFFSET ; CHAR_ID_ATHENA  
+	dw $98CA+TOFFSET ; CHAR_ID_KENSOU  
+	dw $98CD+TOFFSET ; CHAR_ID_KIM     
+	dw $98D0+TOFFSET ; CHAR_ID_MAI     
+	dw $9921+TOFFSET ; CHAR_ID_IORI    
+	dw $9924+TOFFSET ; CHAR_ID_EIJI    
+	dw $9927+TOFFSET ; CHAR_ID_BILLY   
+	dw $992A+TOFFSET ; CHAR_ID_SAISYU  
+	dw $992D+TOFFSET ; CHAR_ID_RUGAL   
+	dw $9930+TOFFSET ; CHAR_ID_NAKORURU
 
 ; =============== CharSelect_IsCPUOpponent ===============
 ; Checks if the current player is a CPU opponent, meaning it's not actively
@@ -4419,7 +4491,11 @@ TextDef_CharSel_TeamTitle:
 ; =============== START OF MODULE OrdSel ===============
 ;
 
+IF REV_VER == 96
+GFXDef_OrdSel_NumPic: mGfxDef "data/gfx/96f/ordsel_numpic.bin"
+ELSE
 GFXDef_OrdSel_NumPic: mGfxDef "data/gfx/ordsel_numpic.bin"
+ENDC
 BG_OrdSel_VS: INCBIN "data/bg/ordsel_vs.bin"
 BG_OrdSel_Pic1: INCBIN "data/bg/ordsel_pic1.bin"
 BG_OrdSel_Pic2: INCBIN "data/bg/ordsel_pic2.bin"

@@ -14,7 +14,7 @@ HITSTOP_FULL_DAMAGE   EQU 0 ; Enables full damage for moves, as in 96 and later.
 DEFAULT_DIPS          EQU $00 ; $E0 ; Default dip switch settings
 UNUSED_NAKORURU_INTRO EQU 0 ; Test for restoring the unused Nakoruru frames.
 
-REV_VER      EQU 0 ; Game Version - Japan
+REV_VER      EQU 96 ; Game Version - Fake 96
 
 ; PLACEHOLDERS FOR ENGLISH MODE OPTIONS - DO NOT CHANGE
 REV_VER_2    EQU 0 ; If set, use the second revision of the game.

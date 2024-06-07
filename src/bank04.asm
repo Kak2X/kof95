@@ -223,6 +223,20 @@ BG_SGB_Border: INCBIN "data/bg/sgb_border.bin"
 
 ; [TCRF] There's a bit more to the backgrounds than what's used, but the unused
 ;        portions are just padding areas.
+IF REV_VER == 96
+GFXDef_Play_Stage_00: mGfxDef "data/gfx/96f/play_stage_00.bin"
+BG_Play_Stage_00: INCBIN "data/bg/96f/play_stage_00.bin"
+BG_Play_Stage_00_Unused: INCBIN "data/bg/96f/play_stage_00_unused.bin"
+GFXDef_Play_Stage_01: mGfxDef "data/gfx/96f/play_stage_01.bin"
+BG_Play_Stage_01: INCBIN "data/bg/96f/play_stage_01.bin"
+BG_Play_Stage_01_Unused: INCBIN "data/bg/96f/play_stage_01_unused.bin"
+GFXDef_Play_Stage_04: mGfxDef "data/gfx/96f/play_stage_04.bin"
+BG_Play_Stage_04: INCBIN "data/bg/96f/play_stage_04.bin"
+BG_Play_Stage_04_Unused: INCBIN "data/bg/96f/play_stage_04_unused.bin"
+GFXDef_Play_Stage_02: mGfxDef "data/gfx/96f/play_stage_02.bin"
+BG_Play_Stage_02: INCBIN "data/bg/96f/play_stage_02.bin"
+BG_Play_Stage_02_Unused: INCBIN "data/bg/96f/play_stage_02_unused.bin"
+ELSE
 GFXDef_Play_Stage_00: mGfxDef "data/gfx/play_stage_00.bin"
 BG_Play_Stage_00: INCBIN "data/bg/play_stage_00.bin"
 BG_Play_Stage_00_Unused: INCBIN "data/bg/play_stage_00_unused.bin"
@@ -235,6 +249,8 @@ BG_Play_Stage_04_Unused: INCBIN "data/bg/play_stage_04_unused.bin"
 GFXDef_Play_Stage_02: mGfxDef "data/gfx/play_stage_02.bin"
 BG_Play_Stage_02: INCBIN "data/bg/play_stage_02.bin"
 BG_Play_Stage_02_Unused: INCBIN "data/bg/play_stage_02_unused.bin"
+ENDC
+
 
 ; =============== END OF BANK ===============
 ; Junk area below.

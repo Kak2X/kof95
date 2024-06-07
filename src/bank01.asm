@@ -4319,10 +4319,18 @@ GFX_Char_Icons: INCBIN "data/gfx/char_icons.bin"
 ; Other HUD elements
 GFXAuto_Play_HUD_Bar: 
 	dw $8D40
+IF REV_VER == 96
+	mGfxDef "data/gfx/96f/play_hud_bar.bin"
+ELSE
 	mGfxDef "data/gfx/play_hud_bar.bin"
+ENDC
 GFXAuto_Play_HUD:
 	dw $8C80
+IF REV_VER == 96
+	mGfxDef "data/gfx/96f/play_hud.bin"
+ELSE
 	mGfxDef "data/gfx/play_hud.bin"
+ENDC
 GFXDef_Play_HUD_1PHuman: mGfxDef "data/gfx/play_hud_1phuman.bin"
 GFXDef_Play_HUD_2PHuman: mGfxDef "data/gfx/play_hud_2phuman.bin"
 GFXDef_Play_HUD_1PCPU: mGfxDef "data/gfx/play_hud_1pcpu.bin"
@@ -4333,8 +4341,14 @@ BG_Play_HUD_1PMarker: INCBIN "data/bg/play_hud_1pmarker.bin"
 BG_Play_HUD_2PMarker: INCBIN "data/bg/play_hud_2pmarker.bin"
 BG_Play_HUD_HealthBarL: INCBIN "data/bg/play_hud_healthbarl.bin"
 BG_Play_HUD_HealthBarR: INCBIN "data/bg/play_hud_healthbarr.bin"
+IF REV_VER == 96
+GFX_Play_HUD_SingleWinMarker: INCBIN "data/gfx/96f/play_hud_singlewinmarker.bin"
+GFX_Char_Cross: INCBIN "data/gfx/96f/char_cross.bin"
+ELSE
 GFX_Play_HUD_SingleWinMarker: INCBIN "data/gfx/play_hud_singlewinmarker.bin"
 GFX_Char_Cross: INCBIN "data/gfx/char_cross.bin"
+ENDC
+
 GFXAuto_Play_HUD_TimerNum:
 	dw $8F10
 	mGfxDef "data/gfx/play_hud_timernum.bin"

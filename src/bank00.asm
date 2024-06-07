@@ -199,7 +199,11 @@ SECTION "EntryPoint", ROM0[$0100]
 	db   $00,$08,$11,$1F,$88,$89,$00,$0E,$DC,$CC,$6E,$E6,$DD,$DD,$D9,$99
 	db   $BB,$BB,$67,$63,$6E,$0E,$EC,$CC,$DD,$DC,$99,$9F,$BB,$B9,$33,$3E
 
+IF REV_VER == 96
+	db   "NETTOU KOF 96",$00,$00	; title
+ELSE
 	db   "NETTOU KOF 95",$00,$00	; title
+ENDC
 	db   $00      		; DMG - classic gameboy
 	db   $41,$37		; new license
 	db   $03      		; SGB flag: SGB capable
@@ -210,7 +214,13 @@ SECTION "EntryPoint", ROM0[$0100]
 	db   $33      		; old license: SGB capable
 	db   $00      		; mask ROM version number
 	db   $C7      		; header check
+IF REV_VER == 96
+	; Fake 96 forgets to update the header checksum, but the global checksum is ok
+	dw   $A527    		; global check
+ELSE
 	dw   $B7B2    		; global check
+ENDC
+
 	
 ; =============== EntryPoint ===============
 EntryPoint:
