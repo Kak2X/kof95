@@ -2299,10 +2299,10 @@ Module_CharSel:
 	ld   hl, TextDef_CharSel_SingleTitle
 	call TextPrinter_Instant
 	
-	ld   hl, $99E1
+	ld   hl, BG_CHARSEL_P1ICON0
 	ld   c, $D1
 	call CharSel_DrawEmptyIcon
-	ld   hl, $99F1
+	ld   hl, BG_CHARSEL_P2ICON0
 	ld   c, $D1
 	call CharSel_DrawEmptyIcon
 	
@@ -2314,7 +2314,7 @@ Module_CharSel:
 	; Otherwise, draw the character icon
 	sla  a							; A *= 2 (Character ID)
 	ld   de, $8DD0					; Where to load GFX
-	ld   hl, $99E2					; Top-right corner of icon in tilemap
+	ld   hl, BG_CHARSEL_P1ICON0+1	; Top-right corner of icon in tilemap
 	ld   c, TILE_CHARSEL_P1ICON0	; Starting tile ID 
 	call Char_DrawIconFlipX
 	
@@ -2326,7 +2326,7 @@ Module_CharSel:
 	; Otherwise, draw the character icon
 	sla  a							; A *= 2 (Character ID)
 	ld   de, $8E90					; Where to load GFX
-	ld   hl, $99F1					; Top-right corner of icon in tilemap
+	ld   hl, BG_CHARSEL_P2ICON0		; Top-left corner of icon in tilemap
 	ld   c, TILE_CHARSEL_P2ICON0	; Starting tile ID 
 	call Char_DrawIcon
 	jp   .initOBJ
@@ -3645,19 +3645,19 @@ CharSel_DrawP1CharIconForNew:
 .char0:
 	ld   a, c						; A = Character ID
 	ld   de, $8DD0					; DE = GFX Ptr
-	ld   hl, $99E2					; HL = Tilemap ptr
+	ld   hl, BG_CHARSEL_P1ICON0+1	; HL = Tilemap ptr (top-right)
 	ld   c, TILE_CHARSEL_P1ICON0	; C = Tile ID pointing to DE
 	jp   .draw
 .char1:
 	ld   a, c
 	ld   de, $8E10
-	ld   hl, $99E4
+	ld   hl, BG_CHARSEL_P1ICON1+1
 	ld   c, TILE_CHARSEL_P1ICON1
 	jp   .draw
 .char2:
 	ld   a, c
 	ld   de, $8E50
-	ld   hl, $99E6
+	ld   hl, BG_CHARSEL_P1ICON2+1
 	ld   c, TILE_CHARSEL_P1ICON2
 .draw:
 	sla  a							; CharId *= 2
@@ -3680,19 +3680,19 @@ CharSel_DrawP2CharIconForNew:
 .char0:
 	ld   a, c
 	ld   de, $8E90
-	ld   hl, $99F1
+	ld   hl, BG_CHARSEL_P2ICON0
 	ld   c, TILE_CHARSEL_P2ICON0
 	jp   .draw
 .char1:
 	ld   a, c
 	ld   de, $8ED0
-	ld   hl, $99EF
+	ld   hl, BG_CHARSEL_P2ICON1
 	ld   c, TILE_CHARSEL_P2ICON1
 	jp   .draw
 .char2:
 	ld   a, c
 	ld   de, $8F10
-	ld   hl, $99ED
+	ld   hl, BG_CHARSEL_P2ICON2
 	ld   c, TILE_CHARSEL_P2ICON2
 .draw:
 	sla  a							; CharId *= 2
@@ -3827,20 +3827,20 @@ CharSel_PrintCharName:
 			; Blank out the old name
 			push bc
 				ld   hl, TextC_Char_None
-				ld   de, $99A1
+				ld   de, BG_CHARSEL_P1NAME
 				call TextPrinter_Instant_CustomPos
 			pop  bc
 			
 			; Player 1 aligns the name to the left.
 			; There's nothing special to do, the starting location is always the same.
-			ld   de, $99A1
+			ld   de, BG_CHARSEL_P1NAME
 			jp   .printString
 			
 		.pl2:
 			; Blank out the old name
 			push bc
 				ld   hl, TextC_Char_None
-				ld   de, $99B3-$08
+				ld   de, BG_CHARSEL_P2NAME-$07
 				call TextPrinter_Instant_CustomPos
 			pop  bc
 			
