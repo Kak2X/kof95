@@ -2,13 +2,9 @@
 ; =============== START OF MODULE Intro ===============
 ;
 
-GFXDef_Intro_Letter:
-	db $34 ; Number of tiles
-GFX_Intro_Letter: INCBIN "data/gfx/intro_letter.bin"
+GFXDef_Intro_Letter: mGfxDef "data/gfx/intro_letter.bin"
 BG_Intro_Letter: INCBIN "data/bg/intro_letter.bin"	
-GFXDef_Intro_Font:
-	db $3A ; Number of tiles
-GFX_Intro_Font: INCBIN "data/gfx/intro_font.bin"
+GFXDef_Intro_Font: mGfxDef "data/gfx/intro_font.bin"
 
 PUSHC
 SETCHARMAP intro
@@ -35,18 +31,12 @@ Text_Intro4:
 	db "            "
 POPC
 
-GFXDef_IntroBG0: 
-	db $80 ; Number of tiles
-GFX_IntroBG0: INCBIN "data/gfx/intro_bg0.bin"
-GFXDef_IntroBG1:
-	db $34 ; Number of tiles
-GFX_IntroBG1: INCBIN "data/gfx/intro_bg1.bin"
+GFXDef_IntroBG0: mGfxDef "data/gfx/intro_bg0.bin"
+GFXDef_IntroBG1: mGfxDef "data/gfx/intro_bg1.bin"
 BG_Intro_Sun: INCBIN "data/bg/intro_sun.bin"
 BG_Intro_Moon: INCBIN "data/bg/intro_moon.bin"
 BG_Intro_Logo: INCBIN "data/bg/intro_logo.bin"
-GFXDef_IntroOBJ: 
-	db $6A ; Number of tiles
-GFX_IntroOBJ: INCBIN "data/gfx/intro_obj.bin"
+GFXDef_IntroOBJ: mGfxDef "data/gfx/intro_obj.bin"
 
 ; =============== Module_Intro ===============
 ; EntryPoint for Intro.
@@ -127,8 +117,8 @@ Module_Intro:
 	
 	ei   
 	
-	; Wait $3C frames
-	ld   b, $3C
+	; Wait 1 second
+	ld   b, 60
 .wait0:
 	call Task_PassControl_NoDelay
 	dec  b
@@ -149,7 +139,7 @@ Module_Intro:
 	ld   [wIntroActPtr_Low], a
 	
 	;--
-	; Wait 60 frames
+	; Wait 1 second
 	ld   bc, 60
 	call Intro_Delay
 	jp   c, .end
@@ -1143,7 +1133,6 @@ ENDR
 	jp   nz, .loop		; If not, loop
 	ret
 	
-IF SKIP_JUNK == 0
-Test_Junk2:
+; =============== END OF BANK ===============
+; Junk area below.
 	mIncJunk "L1D7A8E"
-ENDC
