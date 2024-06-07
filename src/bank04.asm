@@ -225,6 +225,7 @@ BG_SGB_Border: INCBIN "data/bg/sgb_border.bin"
 ;        portions are just padding areas.
 GFXDef_Play_Stage_00: mGfxDef "data/gfx/play_stage_00.bin"
 BG_Play_Stage_00: INCBIN "data/bg/play_stage_00.bin"
+BG_Play_Stage_00_Unused: INCBIN "data/bg/play_stage_00_unused.bin"
 GFXDef_Play_Stage_01: mGfxDef "data/gfx/play_stage_01.bin"
 BG_Play_Stage_01: INCBIN "data/bg/play_stage_01.bin"
 BG_Play_Stage_01_Unused: INCBIN "data/bg/play_stage_01_unused.bin"
