@@ -11077,9 +11077,9 @@ Play_Pl_DoBasicMoveInput:
 		; Starts a crouching light punch.
 		;
 		BasicInput_StartCrouchLightPunch:
-			; [POI] If the easy moves cheat is enabled, crouching lps reflect projectiles.
+			; [POI] If the powerup cheat is enabled, crouching lps reflect projectiles.
 			ld   a, [wDipSwitch]
-			bit  DIPB_EASY_MOVES, a		; Is the cheat set?
+			bit  DIPB_POWERUP, a		; Is the cheat set?
 			jp   z, .go					; If not, skip
 			ld   hl, iPlInfo_Flags0
 			add  hl, bc					; Otherwise, make it reflect projectiles
@@ -11107,9 +11107,9 @@ Play_Pl_DoBasicMoveInput:
 			ld   a, SFX_HEAVY
 			call HomeCall_Sound_ReqPlayExId
 
-			; [POI] If the easy moves cheat is enabled, crouching hps erase projectiles.
+			; [POI] If the powerup cheat is enabled, crouching hps erase projectiles.
 			ld   a, [wDipSwitch]
-			bit  DIPB_EASY_MOVES, a		; Is the cheat set?
+			bit  DIPB_POWERUP, a		; Is the cheat set?
 			jp   z, .go					; If not, skip
 			ld   hl, iPlInfo_Flags0
 			add  hl, bc					; Otherwise, make it delete projectiles

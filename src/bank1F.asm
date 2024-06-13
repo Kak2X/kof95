@@ -2749,9 +2749,9 @@ Play_CPU_OnPlNear:
 	; - allows hit cancel
 	; - makes the CPU block/walk back if the opponent is invulnerable.
 	
-	; [POI] With the shortcut keys enabled, HARD is perpetually HARDEST here
+	; [POI] On POWERUP mode, HARD is perpetually HARDEST here
 	ld   a, [wDipSwitch]
-	bit  DIPB_EASY_MOVES, a
+	bit  DIPB_POWERUP, a
 	jp   nz, .hardest
 	; [POI] The other STAGESEQ_SAISYU checks in .easy and .norm, instead of leading directly to .hardest, led here.
 	;       What gives? Is it an error? Should have this been checking STAGESEQ_RUGAL?
@@ -2881,10 +2881,10 @@ IF VER_EN
 Play_CPU_OnBlockstunKnockback:
 
 	;
-	; Without easy moves active, fall back to Play_CPU_SetRandCharInput
+	; Without powerup mode active, fall back to Play_CPU_SetRandCharInput
 	;
 	ld   a, [wDipSwitch]
-	bit  DIPB_EASY_MOVES, a				; Is the easy moves cheat enabled?
+	bit  DIPB_POWERUP, a				; Is the powerup cheat enabled?
 	jp   z, Play_CPU_SetRandCharInput	; If not, jump
 	
 .powerup:
@@ -3079,7 +3079,7 @@ IF VER_EN
 	add  hl, bc
 	ld   a, [hl]
 	cp   CHAR_ID_ATHENA					; Opponent is Athena?
-	jp   nz, .chkShortcuts				; If not, skip
+	jp   nz, .chkPowerupMode			; If not, skip
 	
 	ld   hl, iPlInfo_MoveIdOther
 	add  hl, bc
@@ -3087,13 +3087,13 @@ IF VER_EN
 	cp   a, MOVE_ATHENA_SHINING_CRYSTAL_BIT_GS	; Opponent is doing a normal super?
 	jp   z, Play_CPU_SetRandCharInputH			; If so, jump
 
-.chkShortcuts:
+.chkPowerupMode:
 
 	;
-	; Handle the projectile distance checks differently with move shortcuts enabled.
+	; Handle the projectile distance checks differently in powerup mode.
 	;
 	ld   a, [wDipSwitch]
-	bit  DIPB_EASY_MOVES, a	; Is the easy moves cheat enabled?
+	bit  DIPB_POWERUP, a	; Is the powerup cheat enabled?
 	jp   z, .norm			; If not, jump
 	
 .powerup:	
@@ -3125,13 +3125,13 @@ IF VER_EN
 .norm:
 ELSE
 
-.chkShortcuts:
+.chkPowerupMode:
 	;
-	; On HARD difficulty, if the move shortcuts are enabled, always crouch
-	; and perform a light punch.
+	; On HARD difficulty, in POWERUP mode, spam cruching light punches,
+	; as they reflect projectiles.
 	;
-	; This is done because crouching light punches reflect projectiles
-	; with move shortcuts enabled.
+	; This was completely redone for the English version (and 96) because
+	; its aggressiveness makes it impossible to use projectiles against the CPU.
 	;
 	ld   a, [wDifficulty]
 	cp   DIFFICULTY_HARD					; Playing on HARD?
@@ -6159,11 +6159,11 @@ ENDC
 	;--
 .chkEasyMovesSGB:
 	;
-	; Easy Moves + SGB Sound Test
+	; Easy Moves + SGB Sound Test + Powerup mode.
 	; Press LEFT + A + B + SELECT 30 times.
 	; (can be done by holding LEFT + A + B and tapping SELECT 30 times)
 	;
-	; Locked behind SGB support here, even though DIPB_EASY_MOVES doesn't require it.
+	; Locked behind SGB support here, even though DIPB_EASY_MOVES/DIPB_POWERUP doesn't require it.
 	; This suggests the code originally only enabled the SGB Sound Test.
 	; Whatever it was, this SGB check was deleted in 96.
 	;
@@ -6185,7 +6185,7 @@ ENDC
 	ld   [wCheatEasyMovesKeysLeft], a
 	jp   nz, .chkWait
 	
-	set  DIPB_EASY_MOVES, [hl]
+	set  DIPB_EASY_MOVES, [hl] ; and DIPB_POWERUP
 	set  DIPB_SGB_SOUND_TEST, [hl]
 	push hl
 		ld   hl, (SGB_SND_A_PUNCH_A << 8)|$01
