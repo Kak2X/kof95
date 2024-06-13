@@ -6140,7 +6140,7 @@ ENDC
 	jp   z, .chkEasyMovesSGB		; If not, skip
 	bit  KEYB_SELECT, e				; Pressed SELECT?
 	jp   z, .chkEasyMovesSGB		; If not, skip
-	bit  DIPB_POWERUP, [hl]			; Already enabled?
+	bit  DIPB_MAXPOW, [hl]			; Already enabled?
 	jp   nz, .chkEasyMovesSGB		; If so, skip
 	
 	; Decrement key counter. If 0, enable the cheat
@@ -6148,7 +6148,7 @@ ENDC
 	dec  a
 	ld   [wCheatInfMeterKeysLeft], a
 	jp   nz, .chkEasyMovesSGB
-	set  DIPB_POWERUP, [hl]
+	set  DIPB_MAXPOW, [hl]
 	
 	push hl
 		ld   hl, (SGB_SND_A_BREATH << 8)|$01

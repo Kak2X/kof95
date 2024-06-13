@@ -942,9 +942,9 @@ MoveC_Nakoruru_MamahahaFlight:
 	; for $200 frames. (512 frames, around 8.5 seconds)
 	;
 	
-	; [POI] In POWERUP mode, bird time is infinite. Enjoy the timer scam.
+	; [POI] With the max power cheat, bird time is infinite. Enjoy the timer scam.
 	ld   a, [wDipSwitch]
-	bit  DIPB_POWERUP, a
+	bit  DIPB_MAXPOW, a
 	jp   nz, .doFlightGravity
 	
 	; Every other frame...

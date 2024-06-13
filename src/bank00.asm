@@ -7497,10 +7497,10 @@ Play_InitRound:
 	ld   [wPlInfo_Pl2+iPlInfo_MaxPow], a
 	
 	;--
-	; [POI] If the powerup cheat is enabled, both players are perpetually at Max Meter.
+	; [POI] If the max power cheat is enabled, both players are perpetually at Max Meter.
 	; Gone in 96, since there the meter starts empty and grows on its own.
 	ld   a, [wDipSwitch]
-	bit  DIPB_POWERUP, a				; In Powerup mode?
+	bit  DIPB_MAXPOW, a					; Max power cheat enabled?
 	jp   z, .loadPlOBJ					; If not, skip
 	ld   a, PLAY_POW_MAX				; Set MAX Pow mode
 	ld   [wPlInfo_Pl1+iPlInfo_Pow], a
@@ -10237,10 +10237,10 @@ Play_Pl_EmptyPowOnSuperEnd:
 	bit  PF0B_SUPERMOVE, [hl]	; Were we just doing a super move?
 	jp   z, .ret				; If not, return
 
-	; Powerup mode has an infinite meter
+	; The max power cheat gives infinite meter
 	ld   a, [wDipSwitch]
-	bit  DIPB_POWERUP, a		; Powerup cheat active?
-	jp   nz, .ret			; If so, return
+	bit  DIPB_MAXPOW, a			; Max power cheat active?
+	jp   nz, .ret				; If so, return
 
 	; Max meter required
 	; It's very possible to have the MAX Power meter run out during

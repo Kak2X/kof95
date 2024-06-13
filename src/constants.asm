@@ -112,7 +112,7 @@ ANIMSPEED_NONE      EQU $FF ; Slowest possible animation speed, set when we want
 
 ; FLAGS
 DIPB_EASY_MOVES       EQU 2 ; SELECT + A/B for easy super moves
-DIPB_POWERUP          EQU 3 ; DIPB_POWERUP Powerup mode. Unlimited POW Meter + unlimited super moves + move changes
+DIPB_MAXPOW           EQU 3 ; Unlimited POW Meter + infinite Mamahaha flight
 DIPB_SGB_SOUND_TEST   EQU 4 ; Adds SGB S.E TEST to the options menu
 DIPB_TEAM_DUPL        EQU 5 ; Allow duplicate characters in a team
 DIPB_UNLOCK_BOSS      EQU 6 ; Unlock Saisyu/Rugal

@@ -330,16 +330,6 @@ ENDC
 	; If we got here, we can continue
 ENDM
 
-; =============== mMvIn_ValDipPowerup ===============
-; Guards against checking move inputs if they require the powerup cheat
-; IN
-; - 1: Label to skip the move inputs
-MACRO mMvIn_ValDipPowerup
-	ld   a, [wDipSwitch]
-	bit  DIPB_POWERUP, a		; Is the cheat enabled?
-	jp   z, \1					; If not, skip
-ENDM
-
 ; =============== mMvIn_ValSkipWithChar ===============
 ; Prevents the move input from being checked when playing as the specified character.
 ; Used to prevent characters from starting moves exclusive to their alternate form,

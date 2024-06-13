@@ -768,9 +768,9 @@ Play_DoMisc_DecMaxPow1P:
 	; Decrement the Max Power meter timer every 8 frames.
 	;
 	
-	; The meter never decrements in powerup mode
+	; The meter never decrements with the max power cheat
 	ld   hl, wDipSwitch
-	bit  DIPB_POWERUP, [hl]
+	bit  DIPB_MAXPOW, [hl]
 	jp   nz, .end
 	
 	; Every 8 frames...
@@ -819,9 +819,9 @@ Play_DoMisc_DecMaxPow2P:
 	; Decrement the Max Power meter timer every 8 frames.
 	;
 	
-	; The meter never decrements in powerup mode
+	; The meter never decrements with the max power cheat
 	ld   hl, wDipSwitch
-	bit  DIPB_POWERUP, [hl]
+	bit  DIPB_MAXPOW, [hl]
 	jp   nz, .end
 	
 	; Every 8 frames...
