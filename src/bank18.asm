@@ -3784,6 +3784,9 @@ MoveC_Athena_PhoenixArrowKick:
 ; Move code for Athena's Shining Crystal Bit (MOVE_ATHENA_SHINING_CRYSTAL_BIT_S).
 ; Significantly simpler than the version in 96.
 MoveC_Athena_ShCryst:
+IF VER_EN
+	call Play_Pl_MoveByColiBoxOverlapX
+ENDC
 	mMvC_ValLoaded .ret
 	; Depending on the visible frame...
 	mMvC_StartChkFrame
@@ -3793,16 +3796,42 @@ MoveC_Athena_ShCryst:
 		mMvC_ChkFrame $03, .obj3
 		mMvC_ChkFrame $04, .obj4
 		mMvC_ChkFrame $05, .obj5
+		
 ; --------------- frame #0 ---------------
 ; Startup.
 .obj0:
-	
+
 	;
 	; For some reason, these actions happen a few frames before the
 	; actual mMvC_ValFrameEnd triggers.
-	; This is so pointless that 96 got rid of this, executing the actions
-	; alongside the other "end of frame" code.
+	; This is so pointless that the English version (and by extension, 96) got rid of this,
+	; executing the actions alongside the other "end of frame" code.
 	;
+	; English 95 still keeps the old iteration though, unreferenced.
+	;
+	
+IF VER_EN
+	; While at the end of the frame...
+	mMvC_ValFrameEnd .anim
+		mMvC_SetAnimSpeed $01
+		; Loop initial two-sphere part (#2 to #1) $0E times.
+		ld   hl, iPlInfo_Athena_ShCryst_LoopTimer
+		add  hl, bc
+		ld   [hl], $0E
+		
+		; Initialize the projectile
+		call Task_PassControlFar
+		call ProjInit_Athena_ShCrystCharge
+		call Task_PassControlFar
+		
+		; Play ching SGB/DMG SFX
+		mMvC_PlaySound SCT_SHCRYSTSPAWN
+		call Task_PassControlFar
+		jp   .anim
+	
+.obj0_unused_old:
+ENDC
+
 	ld   hl, iOBJInfo_FrameLeft
 	add  hl, de
 	ld   a, [hl]
@@ -3818,8 +3847,7 @@ MoveC_Athena_ShCryst:
 		ld   hl, iPlInfo_Athena_ShCryst_LoopTimer
 		add  hl, bc
 		ld   [hl], $0E
-	jp   .anim
-	
+		jp   .anim
 .obj0_initProj:
 	; Initialize the projectile
 	call Task_PassControlFar
@@ -3837,7 +3865,7 @@ MoveC_Athena_ShCryst:
 .obj1:
 	; Just animates as part of the charge loop.
 	jp   .anim
-	
+
 ; --------------- frame #2 ---------------
 ; Phase 1 - double small sphere + input check + loop check.
 .obj2:
@@ -4292,6 +4320,7 @@ ProjInit_Athena_ShCrystCharge:
 	
 			; Save a copy of the player's position to the projectile's slot.
 			; This is because it's used as the projectile's origin.
+			; This exact thing will be also done when updating the origin through ProjC_Athena_ShCrystCharge_SetOrigin (English version only)
 			push bc
 				; BC = Ptr to X Position
 				ld   hl, iOBJInfo_X
@@ -4337,6 +4366,7 @@ ProjInit_Athena_ShCrystCharge:
 			ld   hl, iOBJInfo_Proj_ShCrystCharge_OrbitMode
 			add  hl, de
 			ld   [hl], PROJ_SHCRYST_ORBITMODE_OVAL
+
 			
 			; 8 times for smooth origin transition between Slow and Hold mode
 			ld   hl, iOBJInfo_Proj_ShCrystCharge_OrigMoveLeft
@@ -4380,6 +4410,12 @@ MoveS_Athena_ShCryst_SetOrbitNear:
 ; - BC: Ptr to wPlInfo
 ; - DE: Ptr to respective wOBJInfo for the projectile
 ProjC_Athena_ShCrystCharge:
+
+IF VER_EN
+	; 30FPS exec, across players
+	call ProjC_Athena_ShCrystCharge_CanExec
+	ret  c
+ENDC
 	
 	; Make the projectile move in an expanding spiral motion if the move ended early
 	; (meaning that we're no longer doing the super).
@@ -4442,6 +4478,15 @@ ProjC_Athena_ShCrystCharge:
 ; =============== ProjC_Athena_ShCrystCharge_Oval ===============
 ; Initial electron-like mode.	
 ProjC_Athena_ShCrystCharge_Oval:
+
+IF VER_EN
+	;
+	; First, always sync the origin 16px above, 8px behind the player's origin
+	;
+	ld   b, -$08
+	ld   c, -$10
+	call ProjC_Athena_ShCrystCharge_SetOrigin
+ENDC
 
 	;
 	; Update the X and Y coordinates, starting with the former.
@@ -4585,13 +4630,23 @@ ProjC_Athena_ShCrystCharge_Oval:
 	ld   [hl], a			; Update it
 	ret
 	
-; =============== ProjC_Athena_ShCrystCharge_Slow ===============	
-ProjC_Athena_ShCrystCharge_Slow:
-	; [POI] Commented out code was probably here, restored for 96.
-	
 ; =============== ProjC_Athena_ShCrystCharge_Hold ===============
-; Like oval mode, but the arc keeps getting smaller.
+; Only different thing from ProjC_Athena_ShCrystCharge_Slow in that
+; the origin is on Athena's hand.
+; It's not even necessary anyway, since ProjC_Athena_ShCrystCharge_Slow aligns it perfectly already.
 ProjC_Athena_ShCrystCharge_Hold:
+	; [POI] This branch existed in the Japanese version as well, but did not contain any code.
+IF VER_EN
+	; Origin is...
+	ld   b, +$00 ; 
+	ld   c, -$18 ; $18px above player
+	call ProjC_Athena_ShCrystCharge_SetOrigin
+	; Fall-through
+ENDC
+	
+; =============== ProjC_Athena_ShCrystCharge_Slow ===============
+; Like oval mode, but the arc keeps getting smaller.
+ProjC_Athena_ShCrystCharge_Slow:
 
 	;
 	; First, slowly move the origin over Athena's hand for a smooth transition
@@ -4809,7 +4864,11 @@ ProjC_Athena_ShCrystCharge_Hold:
 ; Spiral outwards motion, used to despawn the projectile when the move ends early.
 ; Code-wise, it's very similar to the other modes.
 ProjC_Athena_ShCrystCharge_Spiral:
-	
+IF VER_EN
+	; 30FPS exec, across players
+	call ProjC_Athena_ShCrystCharge_CanExec
+	ret  c
+ENDC
 	; Not necessary, already done by .switchToSpiral
 	ld   hl, iOBJInfo_Play_DamageVal
 	add  hl, de
@@ -4948,6 +5007,42 @@ ProjC_Athena_ShCrystCharge_Spiral:
 	ld   [hl], a			; Update it
 	ret
 	
+IF VER_EN
+; =============== ProjC_Athena_ShCrystCharge_CanExec ===============
+; Called at the start of the charging projectile code to determine if 
+; the rest of the code should be executed.
+; This projectile is special in that it executes its code every other
+; gameplay frame, alternating between 1P and 2P.
+; Even frames -> 2P exec
+; Odd  frames -> 1P exec
+; IN
+; - BC: Ptr to wPlInfo
+; OUT
+; - C flag: If set, the code should not execute
+ProjC_Athena_ShCrystCharge_CanExec:
+	ld   hl, iPlInfo_PlId
+	add  hl, bc
+	ld   a, [hl]
+	cp   PL2			; Playing as 2P?
+	jp   z, .pl2		; If so, jump
+.pl1:
+	ld   a, [wTimer]
+	bit  0, a			; wPlayTimer % 2 == 0? (even frame)
+	jp   z, .retSet		; If so, no exec
+	jp   .retClear		; Otherwise, exec it
+.pl2:
+	ld   a, [wTimer]
+	bit  0, a			; wPlayTimer % 2 != 0? (odd frame)
+	jp   nz, .retSet	; If so, no exec
+.retClear:
+	scf
+	ccf		; C flag clear
+	ret
+.retSet:
+	scf		; C flag set
+	ret
+ENDC
+	
 ; =============== ProjC_Athena_ShCrystCharge_GetSinePos ===============
 ; Gets a value from the coordinates table and shifts it left B times.
 ; IN
@@ -4979,7 +5074,96 @@ ProjC_Athena_ShCrystCharge_GetSinePos:
 		pop  hl
 	pop  de
 	ret
+
+IF VER_EN
+; =============== ProjC_Athena_ShCrystCharge_SetOrigin ===============
+; Sets a new origin for the projectile, relative to the player's current position.
+; IN
+; - B: X Offset.
+;      This is relative to the projectile facing *left*, so positive values move it backwards.
+; - C: Y Offset.
+; - DE: Ptr to wOBJInfo for projectile
+ProjC_Athena_ShCrystCharge_SetOrigin:
+
+	;
+	; Refresh the base origin first.
+	; Copy the player's X and Y positions to iOBJInfo_Proj_ShCrystCharge_Orig*.
+	;
+	push bc
+		push de
+			; BC = Ptr to the X Origin of the projectile (Destination)
+			ld   hl, iOBJInfo_Proj_ShCrystCharge_OrigX
+			add  hl, de
+			push hl
+			pop  bc
+			
+			; HL = Ptr to the player's X position (Source)
+			push de
+				; This requires seeking back to the player's wOBJInfo.
+				; As always, it's 2 slots before the one for the projectile, in DE.
+				ld   hl, -(OBJINFO_SIZE*2)
+				add  hl, de		; HL = iOBJInfo_Status for player
+				
+				; Seek to the X position
+				ld   de, iOBJInfo_X
+				add  hl, de
+			pop  de
+			
+			; Sync the X origin
+			ld   a, [hl]	; Read Player X Position
+			ld   [bc], a	; Copy it over as new X origin
+			
+			; Sync the Y origin
+			inc  hl			; Seek to iOBJInfo_XSub
+			inc  hl			; Seek to iOBJInfo_YSub
+			inc  bc			; Seek to iOBJInfo_Proj_ShCrystCharge_OrigY
+			ld   a, [hl]	; Read Player Y Position
+			ld   [bc], a	; Copy it over as new Y origin
+		pop  de
+	pop  bc
 	
+	;
+	; Apply the X Offset.
+	; Bizzarely, positive offset values make set it backwards here.
+	;
+	ld   hl, iOBJInfo_OBJLstFlags
+	add  hl, de
+	bit  SPRB_XFLIP, [hl]	; Is the projectile facing right? (initially thrown on the 1P side?)
+	jp   nz, .setPosR		; If so, jump
+	; Otherwise, it's facing left (2P side)
+.setPosL:
+	; iOBJInfo_Proj_ShCrystCharge_OrigX += B
+	ld   hl, iOBJInfo_Proj_ShCrystCharge_OrigX
+	add  hl, de
+	ld   a, [hl]	; A = OrigX
+	add  b			; += OffsetX
+	ld   [hl], a	; Save it back
+	jp   .setPosY
+	
+.setPosR:
+	; iOBJInfo_Proj_ShCrystCharge_OrigX -= B
+	ld   hl, iOBJInfo_Proj_ShCrystCharge_OrigX
+	add  hl, de		; HL = Ptr to OrigX
+	ld   a, b		; A = -OffsetX
+	cpl
+	inc  a
+	ld   b, [hl]	; B = OrigX
+	add  b			; += OffsetX
+	ld   [hl], a	; Save it back
+	
+	;
+	; Apply the Y Offset.
+	;
+.setPosY:
+	; iOBJInfo_Proj_ShCrystCharge_OrigY += C
+	ld   hl, iOBJInfo_Proj_ShCrystCharge_OrigY
+	add  hl, de
+	ld   a, [hl]	; A = OrigY
+	add  c			; += OffsetY
+	ld   [hl], a	; Save it back
+	ret
+ENDC
+
 ; =============== ProjC_Athena_ShCrystCharge_GetBaseSinePos ===============
 ; Gets a base coordinate position for the projectile from the coordinates table.
 ; IN
@@ -6148,7 +6332,15 @@ ProjInit_Heidern_CrossCutter:
 ;
 	
 GFXDef_Cutscene_Font_CharUnlock0: mGfxDef "data/gfx/cutscene_font_charunlock0.bin"
+; [TCRF] The leftover Japanese Nakoruru unlock instructions got altered in the English version,
+;        most importantly mentioning the inputs for the flight moves when done flightless.
+;        The updated instructions use a new ポ character, which wasn't in the font pack before.
+;        This is significant because there is no second revision released for the Japanese version.
+IF VER_EN
+GFXDef_Cutscene_Font_CharUnlock1: mGfxDef "data/gfx/en/cutscene_font_charunlock1.bin"
+ELSE
 GFXDef_Cutscene_Font_CharUnlock1: mGfxDef "data/gfx/cutscene_font_charunlock1.bin"
+ENDC
 PUSHC
 SETCHARMAP charunlock 
 Text_CutsceneBossUnlock0:
@@ -6195,40 +6387,63 @@ Text_CutsceneSaisyuMoveList:
 	db "↓↘→+B   →↓↘+B "
 	db "              "
 	db "かむかかり         "
-	db "→↘↓/←+B       "
+	db "→↘↓↙←+B       "
 	db "              "
 	db "おろちなぎ         "
-	db "↓/←/↓↘→+B     "
+	db "↓↙←↙↓↘→+B     "
 Text_CutsceneRugalMoveList:
 	db "れっぷうけん  カイザーウェーブ"
-	db "↓↘→+B   →←/↓↘→+B"
+	db "↓↘→+B   →←↙↓↘→+B"
 	db "                "
 	db "ジェノサイドカッター      "
-	db "↓/←↖+A          "
+	db "↓↙←↖+A          "
 	db "                "
 	db "ダークバリ<ア2>ー ゴッドプレス  "
-	db "↓↘→+A   →↘↓/←+B "
+	db "↓↘→+A   →↘↓↙←+B "
 	db "                "
 	db "ギガンテックプレッシヤー    "
-	db "→↘↓/←→↘↓/←+A    "
+	db "→↘↓↙←→↘↓↙←+A    "
 	db "                "
+	
+IF VER_EN
+; [TCRF] See above
 Text_CutsceneNakoruruMoveList:
 	db "アムベヤトロ   アンヌムツベ   "
-	db "→↘↓/←+B  ←/↓+B    "
+	db "→↘↓↙←+B  ←↙↓+B    "
 	db "                  "
 	db "レラムツベ    カムイリムセ   "
-	db "↓↘→+B    ←↓/+B    "
+	db "↓↘→+B    ←↓↙+B    "
+	db "                  "
+	db "カムイムツベ   ヤトロポック   "
+	db "たかにつかまって たかにつかまって "
+	db "B        ↓+B      "
+	db "                  "
+	db "アペチカムイリムセ たかにつかまる "
+	db "←↓↙+B(<大2>)  ↓↙←+A   "
+	db "                  "
+	db "エレルシカムイリムセ        "
+	db "→↘↓↙←→↘↓↙←+B      "
+	db "                  "
+ELSE
+Text_CutsceneNakoruruMoveList:
+	db "アムベヤトロ   アンヌムツベ   "
+	db "→↘↓↙←+B  ←↙↓+B    "
+	db "                  "
+	db "レラムツベ    カムイリムセ   "
+	db "↓↘→+B    ←↓↙+B    "
 	db "                  "
 	db "カムイムツベ   レラムツベ    "
 	db "たかにつかまって たかにつかまって "
 	db "B        ↓+B      "
 	db "                  "
 	db "アペチカムイリムセ         "
-	db "←↓/+B(<SUPER>)          "
+	db "←↓↙+B(<大2>)          "
 	db "                  "
 	db "エレルシカムイリムセ        "
-	db "→↘↓/←→↘↓/←+B      "
+	db "→↘↓↙←→↘↓↙←+B      "
 	db "                  "
+ENDC
+
 POPC
 
 ; =============== SubModule_CutsceneCharUnlock ===============
@@ -6264,12 +6479,18 @@ SubModule_CutsceneCharUnlock:
 	; ==============================
 	
 	; Load the cutscene font
+IF VER_EN
+	ld   a, $00 ; Tile ID Offset
+	ld   de, $9000
+	call Cutscene_InitFont
+ELSE
 	ld   hl, GFXDef_Cutscene_Font_CharUnlock0
 	ld   de, $9000			; 3rd GFX Block, tiles $00-$7F
 	call CopyTilesAutoNum
 	ld   hl, GFXDef_Cutscene_Font_CharUnlock1
 	ld   de, $8800			; 2nd GFX Block, tiles $80-$8B
 	call CopyTilesAutoNum
+ENDC
 	
 	ld   a, LCDC_PRIORITY|LCDC_OBJENABLE|LCDC_OBJSIZE|LCDC_WTILEMAP|LCDC_ENABLE
 	rst  $18				; Resume LCD
@@ -6328,8 +6549,39 @@ Cutscene_CharUnlockBoss:
 	ld   a, LCDC_PRIORITY|LCDC_OBJENABLE|LCDC_OBJSIZE|LCDC_WTILEMAP|LCDC_ENABLE
 	rst  $18				; Resume LCD
 	;-----------------------------------
+IF VER_EN
+	call Task_PassControl_NoDelay
+ENDC
 	;--
 	
+IF VER_EN
+	; Saisyu Text 0
+	ld   hl, TextDef_CutsceneBossUnlockEn
+	ld   b, BANK(TextDef_CutsceneBossUnlockEn) ; BANK $13
+	ld   c, $0A
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene18_PostTextWrite
+	call ClearBGMap
+	
+	; Saisyu Move List 0
+	ld   hl, TextDef_CutsceneSaisyuMoveListEn0
+	ld   b, BANK(TextDef_CutsceneSaisyuMoveListEn0) ; BANK $13
+	ld   c, $06
+	call TextPrinter_MultiFrameFar_NoCtrl
+	call Task_PassControl_NoDelay
+	ld   b, $3C
+	call Cutscene18_PostTextWrite
+	call Task_PassControl_NoDelay
+	
+	; Saisyu Move List 1
+	ld   hl, TextDef_CutsceneSaisyuMoveListEn1
+	ld   b, BANK(TextDef_CutsceneSaisyuMoveListEn1) ; BANK $13
+	ld   c, $06
+	call TextPrinter_MultiFrameFar_NoCtrl
+	call Task_PassControl_NoDelay
+ELSE
 	;--
 	; #1 - Saisyu Text
 	ld   de, Text_CutsceneBossUnlock0
@@ -6353,6 +6605,7 @@ Cutscene_CharUnlockBoss:
 	ld   a, $04
 	call TextPrinter_MultiFrame_WithSpeedup
 	call Task_PassControl_NoDelay
+ENDC
 	; Press START to continue
 .smLoop:
 	call Cutscene18_IsStartPressed
@@ -6363,6 +6616,9 @@ Cutscene_CharUnlockBoss:
 	
 .rugal:
 	call ClearBGMap
+IF VER_EN
+	call Task_PassControl_NoDelay
+ENDC
 	
 	;--
 	; #3 - Draw Rugal
@@ -6375,6 +6631,34 @@ Cutscene_CharUnlockBoss:
 	;-----------------------------------
 	;--
 	
+IF VER_EN
+	; Rugal Text
+	ld   hl, TextDef_CutsceneBossUnlockEn1
+	ld   b, BANK(TextDef_CutsceneBossUnlockEn1) ; BANK $13
+	ld   c, $06
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene18_PostTextWrite
+	call ClearBGMap
+	
+	; Rugal move list 0
+	ld   hl, TextDef_CutsceneRugalMoveListEn0
+	ld   b, BANK(TextDef_CutsceneRugalMoveListEn0) ; BANK $13
+	ld   c, $06
+	call TextPrinter_MultiFrameFar_NoCtrl
+	call Task_PassControl_NoDelay
+	ld   b, $3C
+	call Cutscene18_PostTextWrite
+	call Task_PassControl_NoDelay
+	
+	; Rugal move list 1
+	ld   hl, TextDef_CutsceneRugalMoveListEn1
+	ld   b, BANK(TextDef_CutsceneRugalMoveListEn1) ; BANK $13
+	ld   c, $06
+	call TextPrinter_MultiFrameFar_NoCtrl
+	call Task_PassControl_NoDelay
+ELSE
 	;--
 	; #4 - Rugal Text
 	ld   de, Text_CutsceneBossUnlock2
@@ -6398,6 +6682,7 @@ Cutscene_CharUnlockBoss:
 	ld   a, $04
 	call TextPrinter_MultiFrame_WithSpeedup
 	call Task_PassControl_NoDelay
+ENDC
 	; Press START to continue
 .rmLoop:
 	call Cutscene18_IsStartPressed
@@ -6411,6 +6696,14 @@ Cutscene_CharUnlockBoss:
 	
 	;--
 	; #6 - Boss unlock instructions (SELECTx3 at the Takara logo)
+IF VER_EN
+	call Task_PassControl_NoDelay
+	ld   hl, TextDef_CutsceneBossUnlockCodeEn
+	ld   b, BANK(TextDef_CutsceneBossUnlockCodeEn) ; BANK $13
+	ld   c, $06
+	call TextPrinter_MultiFrameFar_NoCtrl
+	call Task_PassControl_NoDelay
+ELSE
 	ld   de, Text_CutsceneBossUnlockCode
 	ld   hl, $9842
 	ld   b, $10
@@ -6418,6 +6711,7 @@ Cutscene_CharUnlockBoss:
 	ld   a, $04
 	call TextPrinter_MultiFrame_WithSpeedup
 	call Task_PassControl_NoDelay
+ENDC
 	; Press START to continue
 .bkLoop:
 	call Cutscene18_IsStartPressed
@@ -6427,7 +6721,9 @@ Cutscene_CharUnlockBoss:
 	
 .last:
 	call ClearBGMap
-	
+IF VER_EN
+	call Task_PassControl_NoDelay
+ENDC
 	;--
 	; #7 - Draw Rugal
 	;-----------------------------------
@@ -6444,6 +6740,17 @@ Cutscene_CharUnlockBoss:
 	;-----------------------------------
 	;--
 	
+IF VER_EN
+	; Rugal text 2
+	ld   hl, TextDef_CutsceneBossUnlockEn2
+	ld   b, BANK(TextDef_CutsceneBossUnlockEn2) ; BANK $13
+	ld   c, $06
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $F0
+	call Cutscene18_PostTextWrite
+	call ClearBGMap
+ELSE
 	;--
 	; #8 - Rugal text 2
 	ld   de, Text_CutsceneBossUnlock5
@@ -6457,6 +6764,7 @@ Cutscene_CharUnlockBoss:
 	call Cutscene18_PostTextWrite
 	call ClearBGMap
 	;--
+ENDC
 	ret
 	
 Cutscene_CharUnlockNakoruru:
@@ -6482,6 +6790,24 @@ Cutscene_CharUnlockNakoruru:
 	;-----------------------------------
 	;--
 
+IF VER_EN
+	; Text 0
+	ld   hl, TextDef_CutsceneNakoruruUnlockEn0
+	ld   b, BANK(TextDef_CutsceneNakoruruUnlockEn0) ; BANK $13
+	ld   c, $06
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene18_PostTextWrite
+	call ClearBGMap
+	
+	; Unlock instructions
+	ld   hl, TextDef_CutsceneNakoruruUnlockCodeEn
+	ld   b, BANK(TextDef_CutsceneNakoruruUnlockCodeEn) ; BANK $13
+	ld   c, $06
+	call TextPrinter_MultiFrameFar_NoCtrl
+	call Task_PassControl_NoDelay
+ELSE
 	;--
 	; #1 - Text 0
 	ld   de, Text_CutsceneNakoruruUnlock0
@@ -6507,6 +6833,7 @@ Cutscene_CharUnlockNakoruru:
 	call TextPrinter_MultiFrame_WithSpeedup
 	call Task_PassControl_NoDelay
 	; Press START to continue
+ENDC
 .nkLoop:
 	call Cutscene18_IsStartPressed
 	jp   c, .nt1
@@ -6515,7 +6842,9 @@ Cutscene_CharUnlockNakoruru:
 	
 .nt1:
 	call ClearBGMap
-	
+IF VER_EN
+	call Task_PassControl_NoDelay
+ENDC	
 	;--
 	; #3 - Draw Nakoruru
 	;-----------------------------------
@@ -6532,6 +6861,34 @@ Cutscene_CharUnlockNakoruru:
 	;-----------------------------------
 	;--
 	
+IF VER_EN
+	; Text 1
+	ld   hl, TextDef_CutsceneNakoruruUnlockEn1
+	ld   b, BANK(TextDef_CutsceneNakoruruUnlockEn1) ; BANK $13
+	ld   c, $06
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene18_PostTextWrite
+	call ClearBGMap
+	
+	; Nakoruru move list 0
+	ld   hl, TextDef_CutsceneNakoruruMoveListEn0
+	ld   b, BANK(TextDef_CutsceneNakoruruMoveListEn0) ; BANK $13
+	ld   c, $06
+	call TextPrinter_MultiFrameFar_NoCtrl
+	call Task_PassControl_NoDelay
+	ld   b, $3C
+	call Cutscene18_PostTextWrite
+	call Task_PassControl_NoDelay
+	
+	; Nakoruru move list 1
+	ld   hl, TextDef_CutsceneNakoruruMoveListEn1
+	ld   b, BANK(TextDef_CutsceneNakoruruMoveListEn1) ; BANK $13
+	ld   c, $06
+	call TextPrinter_MultiFrameFar_NoCtrl
+	call Task_PassControl_NoDelay
+ELSE
 	;--
 	; #4 - Text 1
 	ld   de, Text_CutsceneNakoruruUnlock2
@@ -6555,14 +6912,17 @@ Cutscene_CharUnlockNakoruru:
 	ld   a, $04
 	call TextPrinter_MultiFrame_WithSpeedup
 	call Task_PassControl_NoDelay
+ENDC
 	; Press START to continue
 .nmLoop:
 	call Task_PassControl_NoDelay
 	call Cutscene18_IsStartPressed
 	jp   nc, .nmLoop
 	call ClearBGMap
+IF VER_EN
+	call Task_PassControl_NoDelay
+ENDC
 	;--
-	
 	ret
 	
 ; =============== Cutscene18_PostTextWrite ===============
@@ -6575,7 +6935,13 @@ Cutscene_CharUnlockNakoruru:
 Cutscene18_PostTextWrite:
 	; Check early abort
 	call Cutscene18_IsStartPressed	; Did anyone press START?
+IF VER_EN
+	jr   nc, .contWait				; If not, jump
+	call Task_PassControl_NoDelay	; Otherwise wait a frame, then return
+	ret
+ELSE
 	ret  c							; If so, return
+ENDC
 .contWait:
 	call Task_PassControl_NoDelay	; Wait frame
 	dec  b							; Are we done?
@@ -6603,11 +6969,29 @@ Cutscene18_IsStartPressed:
 .abort:
 	scf
 	ret
+
+IF VER_EN
+
+; In BANK $1F on the Japanese version
+FontDef_Default:
+	dw $9000 	; Destination ptr
+	db $30 		; Tiles to copy
+.col:
+	db COL_WHITE ; Bit0 color map (background)
+	db COL_BLACK ; Bit1 color map (foreground)
+	; 1bpp font gfx
+.gfx:
+	INCBIN "data/gfx/font.bin"
+	
+	; =============== END OF BANK ===============
+	; Junk area below.	
+	mIncJunk "L187C2D"
+ELSE
+	; =============== END OF BANK ===============
+	; Junk area below, contains a partial duplicate of the above subroutine.
+	mIncJunk "L1879E0"
+ENDC
 	
 ; 
 ; =============== END OF MODULE Win/Cutscene ===============
 ;
-
-; =============== END OF BANK ===============
-; Junk area below, contains a partial duplicate of the above subroutine.
-	mIncJunk "L1879E0"

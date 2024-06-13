@@ -16,9 +16,4 @@ UNUSED_NAKORURU_INTRO EQU 0 ; Test for restoring the unused Nakoruru frames.
 
 REV_VER      EQU 96 ; Game Version - Fake 96
 
-; PLACEHOLDERS FOR ENGLISH MODE OPTIONS - DO NOT CHANGE
-REV_VER_2    EQU 0 ; If set, use the second revision of the game.
-REV_LOGO_EN  EQU 0 ; Use Laguna logo and english-style copyright/logo changes.
-REV_LANG_EN  EQU 0 ; Use English text.
-
 INCLUDE "main.asm"

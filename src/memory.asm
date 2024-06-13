@@ -137,6 +137,12 @@ wFontLoadBit1Col                   :db     ; EQU $C743 ; 2pp color mapped to bit
 wFontLoadBit0Col                   :db     ; EQU $C744 ; 2pp color mapped to bit0 on 1bpp graphics
 wFontLoadTmpGFX                    :ds 2   ; EQU $C745 ; 2 bytes (size of a line)
 
+IF VER_EN
+wTextPrintTileOffset               :db ; EQU $C747 ; Offset added to the tile ID after the ASCII to Tile conversion. Set to something other than 0 when the cutscene font is loaded at an alternate address.
+wTextPrintFlags                    :db ; EQU $C748 ; Text printer modifiers
+ENDC
+
+
 wOBJScrollX                 :db ; EQU $C747 ; X position *subtracted* to every OBJ.
 ds 1 ; Missing subpixel position
 wOBJScrollY                 :db ; EQU $C749 ; Y position *subtracted* to every OBJ.

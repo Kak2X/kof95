@@ -338,7 +338,7 @@ Win_ChkNormEndingCutscene:
 	; Omega Rugal dies
 	ld   b, BANK(SubModule_CutsceneRugalDefeat) ; BANK $03
 	ld   hl, SubModule_CutsceneRugalDefeat
-IF REV_VER == 96
+IF REV_VER == VER_96F
 	nop ; [POI] The fake 96 disables all cutscenes.
 ELSE
 	rst  $08
@@ -346,7 +346,7 @@ ENDC
 	; Ending text
 	ld   b, BANK(SubModule_CutsceneEpilogue) ; BANK $0A
 	ld   hl, SubModule_CutsceneEpilogue
-IF REV_VER == 96
+IF REV_VER == VER_96F
 	nop
 ELSE
 	rst  $08
@@ -389,7 +389,7 @@ ENDM
 	bit  MODEB_TEAM, a						; Playing in Team mode?
 	jp   nz, Win_ChkCutsceneTeam			; If so, jump
 	
-IF REV_VER == 96
+IF REV_VER == VER_96F
 	; [POI] The cutscene disabling causes the boss rounds to malfunction!
 	;       They were never meant to go through the character select random picker.
 	ld   a, [wCharSeqId]
@@ -453,7 +453,7 @@ Win_RugalDefeatCutsceneSingle:
 	; Omega Rugal dies
 	ld   b, BANK(SubModule_CutsceneRugalDefeat) ; BANK $03
 	ld   hl, SubModule_CutsceneRugalDefeat
-IF REV_VER == 96
+IF REV_VER == VER_96F
 	nop
 ELSE
 	rst  $08
@@ -461,7 +461,7 @@ ENDC
 	; Ending text
 	ld   b, BANK(SubModule_CutsceneEpilogue) ; BANK $0A
 	ld   hl, SubModule_CutsceneEpilogue
-IF REV_VER == 96
+IF REV_VER == VER_96F
 	nop
 ELSE
 	rst  $08
@@ -494,7 +494,7 @@ Win_StartSpecRoundSingle:
 ; See also: Win_ChkCutsceneSingle
 Win_ChkCutsceneTeam:
 
-IF REV_VER == 96
+IF REV_VER == VER_96F
 	ld   a, [wCharSeqId]
 	cp   STAGESEQ_SAISYU
 	mNoCutscene
@@ -568,7 +568,7 @@ Win_RugalDefeatCutsceneTeam:
 	; Omega Rugal dies
 	ld   b, BANK(SubModule_CutsceneRugalDefeat) ; BANK $03
 	ld   hl, SubModule_CutsceneRugalDefeat
-IF REV_VER == 96
+IF REV_VER == VER_96F
 	nop
 ELSE
 	rst  $08
@@ -576,7 +576,7 @@ ENDC
 	; Ending text
 	ld   b, BANK(SubModule_CutsceneEpilogue) ; BANK $0A
 	ld   hl, SubModule_CutsceneEpilogue
-IF REV_VER == 96
+IF REV_VER == VER_96F
 	nop
 ELSE
 	rst  $08
@@ -758,6 +758,10 @@ Win_Mode_SingleLost:
 	
 	; [BUG] No new SGB palette layout is loaded.
 	;       The existing win screen palette leaves visible gray squares.
+IF VER_EN || FIX_BUGS
+	ld   de, SCRPAL_INTRO
+	call HomeCall_SGB_ApplyScreenPalSet
+ENDC
 	
 	; Display "CONTINUE 9" text
 	ld   hl, TextDef_Continue
@@ -827,6 +831,10 @@ Win_Mode_SingleDraw:
 	call ClearBGMap
 	
 	; [BUG] SGB Palette also not set here.
+IF VER_EN || FIX_BUGS
+	ld   de, SCRPAL_INTRO
+	call HomeCall_SGB_ApplyScreenPalSet
+ENDC
 	
 	; Display "CONTINUE 9" text
 	ld   hl, TextDef_Continue
@@ -998,9 +1006,15 @@ Win_DoWinScr:
 	;
 	push bc
 		; Win quote text
+	IF VER_EN
+		ld   a, $08 ; Tile ID Offset
+		ld   de, $9080
+		call Cutscene_InitFont
+	ELSE
 		ld   hl, GFXDef_WinScr_Font
 		ld   de, $9080
 		call CopyTilesAutoNum
+	ENDC
 		
 		; BG pattern graphics
 		ld   hl, GFXDef_WinScr_Bar
@@ -1290,15 +1304,20 @@ WinScr_PrintWinQuote:
 	; HL = WinScr_CharTextPtrTbl[iPlInfo_CharId]
 	;
 	
-	
 	; Create the table offset.
-	; Each table entry is 8 bytes long and the CharId is already multiplied by 2,
-	; so it only needs to be multiplied by 4 (<< 2).
 	ld   hl, iPlInfo_CharId
 	add  hl, bc
 	ld   a, [hl]					; A = CharId
+IF !VER_EN
+	; The Japanese version needs to store a bunch of information that the raw text data
+	; doesn't provide, so each table entry ends up being 8 bytes long.
+	; The CharId is already multiplied by 2, so it only needs to be multiplied by 4 (<< 2).
+	
+	; Meanwhile, the English version (as well as 96) stores the win quotes as TextDef, so it
+	; can just be a straight pointer table.
 	sla  a							; A *= 4
 	sla  a
+ENDC
 	ld   hl, WinScr_CharTextPtrTbl	; HL = Table base ptr
 	ld   d, $00						; DE = A
 	ld   e, a
@@ -1308,6 +1327,21 @@ WinScr_PrintWinQuote:
 	; Get the parameters out
 	;
 	
+IF VER_EN
+	; byte0-1 -> HL
+	; Ptr to TextDef
+	ld   e, [hl]
+	inc  hl
+	ld   d, [hl]
+	inc  hl
+	push de
+	pop  hl
+	
+	ld   b, BANK(TextDef_WinEn_Marker) ; All English win quotes are in BANK $19
+	ld   c, $08 ; 8 frame delay between letters 
+	call TextPrinter_MultiFrameFar_AllowFast
+ELSE
+
 	; byte0-1 -> DE
 	; Ptr to text data (list of tile IDs)
 	ld   e, [hl]
@@ -1332,15 +1366,35 @@ WinScr_PrintWinQuote:
 		ld   c, [hl]
 	pop  hl ; Restore to proper reg
 	
-	; 4 frames delay between letters 
+	; 4 frame delay between letters 
 	ld   a, $04
-	
 	call TextPrinter_MultiFrame_WithSpeedup
+ENDC
 	ret
 	
 ; =============== WinScr_CharTextPtrTbl ===============
 ; This table maps every character to its own win quote.
 WinScr_CharTextPtrTbl:
+IF VER_EN
+	dw TextDef_WinEn_Kyo ; CHAR_ID_KYO     
+	dw TextDef_WinEn_Benimaru ; CHAR_ID_BENIMARU
+	dw TextDef_WinEn_Ryo ; CHAR_ID_RYO     
+	dw TextDef_WinEn_Yuri ; CHAR_ID_YURI    
+	dw TextDef_WinEn_Terry ; CHAR_ID_TERRY   
+	dw TextDef_WinEn_Joe ; CHAR_ID_JOE     
+	dw TextDef_WinEn_Heidern ; CHAR_ID_HEIDERN 
+	dw TextDef_WinEn_Ralf ; CHAR_ID_RALF    
+	dw TextDef_WinEn_Athena ; CHAR_ID_ATHENA  
+	dw TextDef_WinEn_Kensou ; CHAR_ID_KENSOU  
+	dw TextDef_WinEn_Kim ; CHAR_ID_KIM     
+	dw TextDef_WinEn_Mai ; CHAR_ID_MAI     
+	dw TextDef_WinEn_Iori ; CHAR_ID_IORI    
+	dw TextDef_WinEn_Eiji ; CHAR_ID_EIJI    
+	dw TextDef_WinEn_Billy ; CHAR_ID_BILLY   
+	dw TextDef_WinEn_Saisyu ; CHAR_ID_SAISYU  
+	dw TextDef_WinEn_Rugal ; CHAR_ID_RUGAL   
+	dw TextDef_WinEn_Nakoruru ; CHAR_ID_NAKORURU
+ELSE
 	; CHAR_ID_KYO
 	dw Text_Win_Kyo ; Text
 	dw $99A1 ; Destination
@@ -1466,6 +1520,7 @@ WinScr_CharTextPtrTbl:
 	db $0E ; Width
 	db $02 ; Height
 	dw $0000 ; Padding
+ENDC
 	
 
 ; =============== WinScr_IdleWait ===============
@@ -1636,4 +1691,8 @@ TextDef_GameOver:
 	mTxtDef "GAME  OVER"
 ; =============== END OF BANK ===============
 ; Junk area below.
+IF VER_EN
+	mIncJunk "L1C7C6F"
+ELSE
 	mIncJunk "L1C7CD9"
+ENDC

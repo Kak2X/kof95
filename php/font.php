@@ -1,6 +1,6 @@
 <?php
 	
-const USE_TXTDEF = true;
+const USE_TXTDEF = false;
 
 $IN_FILE = "tempconv.txt";
 $OUT_FILE = "tempconv.asm";
@@ -583,7 +583,7 @@ const CONV_TABLE_CHARUNLOCK = [
 	"ベ",
 	"ヤ",
 	"↓",
-	"/",
+	"↙",
 	"←",
 	"+",
 	"B",
@@ -594,7 +594,7 @@ const CONV_TABLE_CHARUNLOCK = [
 	"つ",
 	"ペ",
 	"(",
-	"<SUPER>",
+	"<大2>",
 	")",
 	"エ",
 	"れ",
@@ -621,6 +621,7 @@ const CONV_TABLE_CHARUNLOCK = [
 	"む",
 	"り",
 	"ち",
+	"ポ", // English-only
 ];
 
 const CONV_TABLE_NAKORURU = [
@@ -705,7 +706,107 @@ const CONV_TABLE_NAKORURU = [
 	"び",
 ];
 
-const CONV_TABLE = CONV_TABLE_ASCII;
+const CONV_TABLE_ASCIIFULL = [
+	null,
+	"↑", // ↑ | Arrows ↓
+	"↗", // ↗ | Arrows ↓
+	"→", // → | Arrows ↓
+	"↘", // ↘ | Arrows ↓
+	"↓", // ↓ | Arrows ↓
+	"↙", // ↙ | Arrows ↓
+	"←", // ← | Arrows ↓
+	"↖", // ↖ | Arrows ↓
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,	
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	"`", // Points to same tile as '
+];
+
+const CONV_TABLE = CONV_TABLE_ASCIIFULL;
 
 const LEN_TABLE = [
 	'Text_CutsceneIntA0' => 0x0C,
@@ -764,7 +865,7 @@ const LEN_TABLE = [
 	'Text_CutsceneNakoruruUnlock0' => 0x0E,
 	'Text_CutsceneNakoruruUnlock1' => 0x0C,
 	'Text_CutsceneNakoruruUnlock2' => 0x0E,
-	'Text_CutsceneNakoruruUnlock3' => 0x12,
+	'Text_CutsceneNakoruruMoveList' => 0x12,
 	'Text_CutsceneNakoruru0' => 0x08,
 	'Text_CutsceneNakoruru1' => 0x10,
 	'Text_CutsceneNakoruru2' => 0x0C,

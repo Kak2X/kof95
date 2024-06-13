@@ -164,17 +164,18 @@ MoveInputReader_Nakoruru:
 	mMvIn_ChkDir MoveInput_FDBFDB, MoveInit_Nakoruru_ElerushKamuiRimse
 .chkPunchNoSuper:
 
-; With less strict inputs, the Cape Swing overlaps the Bird Throw, which is annoying
-IF GOOD_INPUTS == 0
-	; BDB+P -> Kamui Rimse (Cape Swing)
-	mMvIn_ChkDir MoveInput_BDB, MoveInit_Nakoruru_KamuiRimse
+; With less strict inputs, the Cape Swing overlaps the Bird Throw, which is annoying.
+; The English version also switches them around.
+IF VER_EN || GOOD_INPUTS
 	; FDB+P -> Amube Yatoro (Bird Throw)
 	mMvIn_ChkDir MoveInput_FDB, MoveInit_Nakoruru_AmubeYatoro
+	; BDB+P -> Kamui Rimse (Cape Swing)
+	mMvIn_ChkDir MoveInput_BDB, MoveInit_Nakoruru_KamuiRimse
 ELSE
-	; FDB+P -> Amube Yatoro (Bird Throw)
-	mMvIn_ChkDir MoveInput_FDB, MoveInit_Nakoruru_AmubeYatoro
 	; BDB+P -> Kamui Rimse (Cape Swing)
 	mMvIn_ChkDir MoveInput_BDB, MoveInit_Nakoruru_KamuiRimse
+	; FDB+P -> Amube Yatoro (Bird Throw)
+	mMvIn_ChkDir MoveInput_FDB, MoveInit_Nakoruru_AmubeYatoro
 ENDC
 	; BD+P -> Annu Mutsube (Horizontal Dash)
 	mMvIn_ChkDir MoveInput_BD, MoveInit_Nakoruru_AnnuMutsube
@@ -2415,5 +2416,5 @@ ExOBJ_Bird_IsRoundOverNoSuper:
 	ret
 	
 ; =============== END OF BANK ===============
-; Unknown large chunk, Junk area below.
+; Unknown large chunk in the Japanese version, Junk area below.
 	mIncJunk "L167DD3"

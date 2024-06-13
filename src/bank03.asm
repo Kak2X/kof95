@@ -2032,7 +2032,7 @@ ProjC_Terry_PowerGeyser:
 		call OBJLstS_Hide
 		ret 
 	
-IF REV_VER == 96
+IF REV_VER == VER_96F
 GFXDef_Play_Stage_03: mGfxDef "data/gfx/96f/play_stage_03.bin"
 BG_Play_Stage_03: INCBIN "data/bg/96f/play_stage_03.bin"
 BG_Play_Stage_03_Unused: INCBIN "data/bg/96f/play_stage_03_unused.bin"
@@ -2047,7 +2047,7 @@ ENDC
 ; =============== START OF MODULE Win/Cutscene ===============
 ;
 
-IF REV_VER == 96
+IF REV_VER == VER_96F
 	; [POI] GFXDef_Cutscene_Rugal is a bit fucked in the fake 96.
 	;       BG_Play_Stage_03_Unused is 16 bytes longer than it should be, shifting the rest down.
 	;       Those 16 bytes (1 tile) are reclaimed from the middle of cutscene_rugal.bin"
@@ -2283,16 +2283,28 @@ SubModule_CutsceneIntA:
 	; ==============================
 	
 	; Load the cutscene font
+IF VER_EN
+	ld   a, $00 ; Tile ID Offset
+	ld   de, $9000
+	call Cutscene_InitFont
+ELSE
 	ld   hl, GFXDef_Cutscene_Font_IntBoss
 	ld   de, $9000
 	call CopyTilesAutoNum
+ENDC
 	
 	; Load Vice's GFX and tilemap
 	ld   hl, GFXDef_Cutscene_Vice
 	ld   de, $8800
 	call CopyTilesAutoNum
 	ld   de, BG_Cutscene_Vice
+	; The English version repositions Vice and Rugal one tile above, to make space for the taller "textbox"
+	; This change is applied everywhere.
+IF VER_EN
+	ld   hl, $9846
+ELSE
 	ld   hl, $9866
+ENDC
 	ld   b, $0A ; Width
 	ld   c, $0A ; Height
 	call CopyBGToRect
@@ -2321,6 +2333,25 @@ SubModule_CutsceneIntA:
 	
 	; Print out the screens of text one by one
 	
+IF VER_EN 
+	;--
+	; Text 0
+	ld   hl, TextDef_CutsceneIntAEn0S	; DE = Source (Single)
+	ld   a, [wPlayMode]
+	and  a						; wPlayMode == MODE_SINGLE1P?
+	jr   z, .t0Set				; If so, skip
+	ld   hl, TextDef_CutsceneIntAEn0T	; DE = Source (Team)
+.t0Set:
+	ld   b, BANK(TextDef_CutsceneIntAEn0S) ; BANK $15
+	ld   c, $04 ; Delay
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4 ; Wait for $B4 frames
+	call Cutscene03_PostTextWrite
+	call Cutscene03_ClearText
+	call Task_PassControl_NoDelay
+	;--
+ELSE
 	;--
 	; #0 - Text 0
 	ld   de, Text_CutsceneIntA0	; Source
@@ -2354,15 +2385,18 @@ SubModule_CutsceneIntA:
 	call Cutscene03_PostTextWrite
 	call Cutscene03_ClearText
 	;--
+ENDC
 	
 	;--
 	; #2 - Scroll Vice right for $78 frames.
 	;      This moves her off-screen, ready to be unloaded.
 	ld   b, $78
 .viceMvLoop:
-	; Pressing START now ends the cutscene early
+	; Pressing START now ends the cutscene early, but only in the Japanese version.
+IF !VER_EN
 	call Cutscene03_IsStartPressed
 	ret  c
+ENDC
 	ld   hl, hScrollX			; Scroll viewport left 1px/frame
 	dec  [hl]
 	call Task_PassControl_NoDelay
@@ -2387,7 +2421,11 @@ SubModule_CutsceneIntA:
 	ld   de, $8800
 	call CopyTilesAutoNum
 	ld   de, BG_Cutscene_Rugal
+IF VER_EN
+	ld   hl, $9840
+ELSE
 	ld   hl, $9860
+ENDC
 	ld   b, $0C ; Width
 	ld   c, $0A ; Height
 	call CopyBGToRect
@@ -2395,15 +2433,20 @@ SubModule_CutsceneIntA:
 	ld   a, LCDC_PRIORITY|LCDC_OBJENABLE|LCDC_OBJSIZE|LCDC_WTILEMAP|LCDC_ENABLE
 	rst  $18				; Resume LCD
 	;-----------------------------------
+IF VER_EN
+	call Task_PassControl_NoDelay
+ENDC
 	
 	;--
 	; #4 - Scroll Rugal right for $30 frames.
 	;      This moves him partially on-screen.
 	ld   b, $30
 .rugalMvLoop:
-	; Pressing START now ends the cutscene early
+	; Pressing START now ends the cutscene early, but only in the Japanese version.
 	call Cutscene03_IsStartPressed
+IF !VER_EN
 	ret  c
+ENDC
 	ld   hl, hScrollX			; Scroll viewport left 1px/frame
 	dec  [hl]
 	call Task_PassControl_NoDelay
@@ -2411,6 +2454,19 @@ SubModule_CutsceneIntA:
 	jp   nz, .rugalMvLoop		; If not, loop
 	;--
 	
+IF VER_EN
+	;--
+	; Text 1
+	ld   hl, TextDef_CutsceneIntAEn1	; Source
+	ld   b, BANK(TextDef_CutsceneIntAEn1)		; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4 ; Wait for $B4 frames
+	call Cutscene03_PostTextWrite
+	jp   Cutscene03_ClearText ; End
+	;--
+ELSE
 	;--
 	; #5 - Text 2
 	ld   de, Text_CutsceneIntA2	; Source
@@ -2444,7 +2500,7 @@ SubModule_CutsceneIntA:
 	call Cutscene03_PostTextWrite
 	jp   Cutscene03_ClearText ; End
 	;--
-	
+ENDC
 ; =============== SubModule_CutsceneIntA ===============
 ; This submodule handles the second intermission cutscene with Rugal.
 SubModule_CutsceneIntB:
@@ -2476,9 +2532,15 @@ SubModule_CutsceneIntB:
 	; ==============================
 	
 	; Load the cutscene font
+IF VER_EN
+	ld   a, $00 ; Tile ID Offset
+	ld   de, $9000
+	call Cutscene_InitFont
+ELSE
 	ld   hl, GFXDef_Cutscene_Font_IntBoss
 	ld   de, $9000
 	call CopyTilesAutoNum
+ENDC
 	
 	ld   a, LCDC_PRIORITY|LCDC_OBJENABLE|LCDC_OBJSIZE|LCDC_WTILEMAP|LCDC_ENABLE
 	rst  $18				; Resume LCD
@@ -2511,7 +2573,11 @@ SubModule_CutsceneIntB:
 	ld   de, $8800
 	call CopyTilesAutoNum
 	ld   de, BG_Cutscene_Rugal
+IF VER_EN
+	ld   hl, $9844
+ELSE
 	ld   hl, $9864
+ENDC
 	ld   b, $0C ; Width
 	ld   c, $0A ; Height
 	call CopyBGToRect
@@ -2519,15 +2585,20 @@ SubModule_CutsceneIntB:
 	ld   a, LCDC_PRIORITY|LCDC_OBJENABLE|LCDC_OBJSIZE|LCDC_WTILEMAP|LCDC_ENABLE
 	rst  $18				; Resume LCD
 	;-----------------------------------
+IF VER_EN
+	call Task_PassControl_NoDelay
+ENDC
 	
 	;--
 	; #0 - Scroll Rugal right for $78 frames.
 	;      This moves him at the center of the screen.
 	ld   b, $78
 .rugalMvLoop:
-	; Pressing START now ends the cutscene early
+	; Pressing START now ends the cutscene early, but only in the Japanese version.
 	call Cutscene03_IsStartPressed
+IF !VER_EN
 	ret  c
+ENDC
 	ld   hl, hScrollX			; Scroll viewport left 1px/frame
 	dec  [hl]
 	call Task_PassControl_NoDelay
@@ -2535,6 +2606,19 @@ SubModule_CutsceneIntB:
 	jp   nz, .rugalMvLoop		; If not, loop
 	;--
 	
+IF VER_EN
+	;--
+	; Text 0
+	ld   hl, TextDef_CutsceneIntBEn0
+	ld   b, BANK(TextDef_CutsceneIntBEn0) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene03_PostTextWrite
+	jp   Cutscene03_ClearText ; End
+	;--
+ELSE
 	;--
 	; #1 - Text 0
 	ld   de, Text_CutsceneIntB0
@@ -2576,6 +2660,8 @@ SubModule_CutsceneIntB:
 	call Cutscene03_PostTextWrite
 	jp   Cutscene03_ClearText ; End
 	;--
+ENDC
+
 	
 ; =============== SubModule_CutsceneSaisyu ===============
 ; This submodule handles the cutscene before fighting Saisyu.
@@ -2608,16 +2694,26 @@ SubModule_CutsceneSaisyu:
 	; ==============================
 	
 	; Load the cutscene font
+IF VER_EN
+	ld   a, $00 ; Tile ID Offset
+	ld   de, $9000
+	call Cutscene_InitFont
+ELSE
 	ld   hl, GFXDef_Cutscene_Font_IntBoss
 	ld   de, $9000
 	call CopyTilesAutoNum
+ENDC
 	
 	; Load Rugal's GFX and tilemap
 	ld   hl, GFXDef_Cutscene_Rugal
 	ld   de, $8800
 	call CopyTilesAutoNum
 	ld   de, BG_Cutscene_Rugal
+IF VER_EN
+	ld   hl, $9844
+ELSE
 	ld   hl, $9864
+ENDC
 	ld   b, $0C
 	ld   c, $0A
 	call CopyBGToRect
@@ -2641,6 +2737,24 @@ SubModule_CutsceneSaisyu:
 	ld   a, BGM_CUTSCENE0
 	call HomeCall_Sound_ReqPlayExId_Stub
 	
+IF VER_EN
+	;--
+	; Text 0
+	ld   hl, TextDef_CutsceneSaisyuEn0S	; Source (Single)
+	ld   a, [wPlayMode]
+	and  a
+	jr   z, .t0Set
+	ld   hl, TextDef_CutsceneSaisyuEn0T	; Source (Team)
+.t0Set:
+	ld   b, BANK(TextDef_CutsceneSaisyuEn0S) ; BANK $15
+	ld   c, $04 ; Delay
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene03_PostTextWrite
+	call Cutscene03_ClearText
+	;--
+ELSE
 	;--
 	; #0 - Text 0
 	ld   de, Text_CutsceneSaisyu00S	; Source (Single)
@@ -2660,6 +2774,7 @@ SubModule_CutsceneSaisyu:
 	call Cutscene03_PostTextWrite
 	call Cutscene03_ClearText
 	;--
+ENDC
 	
 	;--
 	; #1 - Draw team members
@@ -2671,6 +2786,19 @@ SubModule_CutsceneSaisyu:
 	;-----------------------------------
 	;--
 	
+IF VER_EN
+	;--
+	; Text 1
+	ld   hl, TextDef_CutsceneSaisyuEn1
+	ld   b, BANK(TextDef_CutsceneSaisyuEn1) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene03_PostTextWrite
+	call Cutscene03_ClearText
+	;--
+ELSE
 	;--
 	; #2 - Text 1
 	ld   de, Text_CutsceneSaisyu01
@@ -2684,7 +2812,8 @@ SubModule_CutsceneSaisyu:
 	call Cutscene03_PostTextWrite
 	call Cutscene03_ClearText
 	;--
-	
+ENDC
+
 	;--
 	; #3 - Draw Rugal
 	call ClearBGMap
@@ -2700,7 +2829,11 @@ SubModule_CutsceneSaisyu:
 	ld   de, $8800
 	call CopyTilesAutoNum
 	ld   de, BG_Cutscene_Rugal
+IF VER_EN
+	ld   hl, $9844
+ELSE
 	ld   hl, $9864
+ENDC
 	ld   b, $0C
 	ld   c, $0A
 	call CopyBGToRect
@@ -2714,6 +2847,19 @@ SubModule_CutsceneSaisyu:
 	;-----------------------------------
 	;--
 	
+IF VER_EN
+	;--
+	; Text 2
+	ld   hl, TextDef_CutsceneSaisyuEn2
+	ld   b, BANK(TextDef_CutsceneSaisyuEn2) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene03_PostTextWrite
+	call Cutscene03_ClearText
+	;--
+ELSE
 	;--
 	; #4 - Text 2
 	ld   de, Text_CutsceneSaisyu02
@@ -2747,6 +2893,7 @@ SubModule_CutsceneSaisyu:
 	call Cutscene03_PostTextWrite
 	call Cutscene03_ClearText
 	;--
+ENDC
 	
 	;--
 	; #6 - Draw team members
@@ -2758,6 +2905,19 @@ SubModule_CutsceneSaisyu:
 	;-----------------------------------
 	;--
 	
+IF VER_EN
+	;--
+	; Text 3
+	ld   hl, TextDef_CutsceneSaisyuEn3
+	ld   b, BANK(TextDef_CutsceneSaisyuEn3) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene03_PostTextWrite
+	call Cutscene03_ClearText
+	;--
+ELSE
 	;--
 	; #7 - Text 4
 	ld   de, Text_CutsceneSaisyu04
@@ -2771,6 +2931,7 @@ SubModule_CutsceneSaisyu:
 	call Cutscene03_PostTextWrite
 	call Cutscene03_ClearText
 	;--
+ENDC
 	
 	;--
 	; #8 - Draw Rugal
@@ -2787,7 +2948,11 @@ SubModule_CutsceneSaisyu:
 	ld   de, $8800
 	call CopyTilesAutoNum
 	ld   de, BG_Cutscene_Rugal
+IF VER_EN
+	ld   hl, $9844
+ELSE
 	ld   hl, $9864
+ENDC
 	ld   b, $0C
 	ld   c, $0A
 	call CopyBGToRect
@@ -2801,6 +2966,20 @@ SubModule_CutsceneSaisyu:
 	;-----------------------------------
 	;--
 	
+IF VER_EN
+	;--
+	; Text 4
+	ld   hl, TextDef_CutsceneSaisyuEn4 ; TextDef_CutsceneSaisyuEn4
+	ld   b, BANK(TextDef_CutsceneSaisyuEn4) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene03_PostTextWrite
+	call Cutscene03_ClearText
+	;--
+ELSE
+
 	;--
 	; #9 - Text 5
 	ld   de, Text_CutsceneSaisyu05S	; Source (Single)
@@ -2853,7 +3032,8 @@ SubModule_CutsceneSaisyu:
 	call Cutscene03_PostTextWrite
 	call Cutscene03_ClearText
 	;--
-	
+ENDC
+
 	;--
 	; #C - Draw Saisyu
 	call ClearBGMap
@@ -2885,6 +3065,9 @@ SubModule_CutsceneSaisyu:
 	ld   a, LCDC_PRIORITY|LCDC_OBJENABLE|LCDC_OBJSIZE|LCDC_WTILEMAP|LCDC_ENABLE
 	rst  $18				; Resume LCD
 	;-----------------------------------
+IF VER_EN
+	call Task_PassControl_NoDelay
+ENDC
 	;--
 	
 	;--
@@ -2893,7 +3076,9 @@ SubModule_CutsceneSaisyu:
 	ld   b, $70
 .saisyuMvLoop:
 	call Cutscene03_IsStartPressed
+IF !VER_EN
 	ret  c
+ENDC
 	ld   hl, hScrollX			; Scroll viewport right 1px/frame
 	inc  [hl]
 	call Task_PassControl_NoDelay
@@ -2901,6 +3086,19 @@ SubModule_CutsceneSaisyu:
 	jp   nz, .saisyuMvLoop
 	;--
 	
+IF VER_EN
+	;--
+	; Text 5
+	ld   hl, TextDef_CutsceneSaisyuEn5
+	ld   b, BANK(TextDef_CutsceneSaisyuEn5) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene03_PostTextWrite
+	call Cutscene03_ClearText
+	;--
+ELSE
 	;--
 	; #E - Text 8
 	ld   de, Text_CutsceneSaisyu08
@@ -2942,7 +3140,8 @@ SubModule_CutsceneSaisyu:
 	call Cutscene03_PostTextWrite
 	call Cutscene03_ClearText
 	;--
-	
+ENDC
+
 	;--
 	; #6 - Draw team members
 	;-----------------------------------
@@ -2955,6 +3154,19 @@ SubModule_CutsceneSaisyu:
 	;-----------------------------------
 	;--
 	
+IF VER_EN
+	;--
+	; Text 6
+	ld   hl, TextDef_CutsceneSaisyuEn6
+	ld   b, BANK(TextDef_CutsceneSaisyuEn6) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene03_PostTextWrite
+	call Cutscene03_ClearText
+	;--
+ELSE
 	;--
 	; #11 - Text B
 	ld   de, Text_CutsceneSaisyu0B
@@ -2968,6 +3180,7 @@ SubModule_CutsceneSaisyu:
 	call Cutscene03_PostTextWrite
 	call Cutscene03_ClearText
 	;--
+ENDC
 	
 	;--
 	; #12 - Draw Rugal
@@ -2984,7 +3197,11 @@ SubModule_CutsceneSaisyu:
 	ld   de, $8800
 	call CopyTilesAutoNum
 	ld   de, BG_Cutscene_Rugal
+IF VER_EN
+	ld   hl, $9844
+ELSE
 	ld   hl, $9864
+ENDC
 	ld   b, $0C
 	ld   c, $0A
 	call CopyBGToRect
@@ -2998,6 +3215,19 @@ SubModule_CutsceneSaisyu:
 	;-----------------------------------
 	;--
 	
+IF VER_EN
+	;--
+	; Text 7
+	ld   hl, TextDef_CutsceneSaisyuEn7
+	ld   b, BANK(TextDef_CutsceneSaisyuEn7) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene03_PostTextWrite
+	jp   Cutscene03_ClearText ; End
+	;--
+ELSE
 	;--
 	; #13 - Text C
 	ld   de, Text_CutsceneSaisyu0C
@@ -3067,7 +3297,8 @@ SubModule_CutsceneSaisyu:
 	call Cutscene03_PostTextWrite
 	jp   Cutscene03_ClearText ; End
 	;--
-	
+ENDC
+
 ; =============== SubModule_CutsceneRugal ===============
 ; This submodule handles the cutscene before fighting Rugal.
 SubModule_CutsceneRugal:
@@ -3099,9 +3330,15 @@ SubModule_CutsceneRugal:
 	; ==============================
 	
 	; Load the cutscene font
+IF VER_EN
+	ld   a, $00 ; Tile ID Offset
+	ld   de, $9000
+	call Cutscene_InitFont
+ELSE
 	ld   hl, GFXDef_Cutscene_Font_IntBoss
 	ld   de, $9000
 	call CopyTilesAutoNum
+ENDC
 	
 	ld   a, LCDC_PRIORITY|LCDC_OBJENABLE|LCDC_OBJSIZE|LCDC_WTILEMAP|LCDC_ENABLE
 	rst  $18				; Resume LCD
@@ -3139,6 +3376,19 @@ SubModule_CutsceneRugal:
 	rst  $18				; Resume LCD
 	;-----------------------------------
 	
+IF VER_EN
+	;--
+	; Text 0
+	ld   hl, TextDef_CutsceneRugalEn0
+	ld   b, BANK(TextDef_CutsceneRugalEn0) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene03_PostTextWrite
+	call Cutscene03_ClearText
+	;--
+ELSE
 	;--
 	; #0 - Text 0
 	ld   de, Text_CutsceneRugal0
@@ -3166,6 +3416,7 @@ SubModule_CutsceneRugal:
 	call Cutscene03_PostTextWrite
 	call Cutscene03_ClearText
 	;--
+ENDC
 	
 	;--
 	; #2 - Draw Rugal
@@ -3182,7 +3433,11 @@ SubModule_CutsceneRugal:
 	ld   de, $8800
 	call CopyTilesAutoNum
 	ld   de, BG_Cutscene_Rugal
+IF VER_EN
+	ld   hl, $9843
+ELSE
 	ld   hl, $9863
+ENDC
 	ld   b, $0C
 	ld   c, $0A
 	call CopyBGToRect
@@ -3196,6 +3451,19 @@ SubModule_CutsceneRugal:
 	;-----------------------------------
 	;--
 	
+IF VER_EN
+	;--
+	; Text 1
+	ld   hl, TextDef_CutsceneRugalEn1
+	ld   b, BANK(TextDef_CutsceneRugalEn1) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene03_PostTextWrite
+	call Cutscene03_ClearText
+	;--
+ELSE
 	;--
 	; #3 - Text 2
 	ld   de, Text_CutsceneRugal2
@@ -3237,6 +3505,7 @@ SubModule_CutsceneRugal:
 	call Cutscene03_PostTextWrite
 	call Cutscene03_ClearText
 	;--
+ENDC
 	
 	;--
 	; #6 - Draw Omega Rugal pic
@@ -3249,6 +3518,27 @@ SubModule_CutsceneRugal:
 	;-----------------------------------
 	;--
 	
+IF VER_EN
+	call Task_PassControl_NoDelay
+	;--
+	; Play SGB transformation sound
+	ld   hl, (SGB_SND_A_JETSTART << 8)|$00
+	call SGB_PrepareSoundPacketA
+	call Task_PassControl_NoDelay
+	;--
+	
+	;--
+	; Text 2
+	ld   hl, TextDef_CutsceneRugalEn2
+	ld   b, BANK(TextDef_CutsceneRugalEn2) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene03_PostTextWrite
+	jp   Cutscene03_ClearText ; End
+	;--
+ELSE
 	;--
 	; #7 - Text 5
 	ld   de, Text_CutsceneRugal5
@@ -3262,6 +3552,7 @@ SubModule_CutsceneRugal:
 	call Cutscene03_PostTextWrite
 	jp   Cutscene03_ClearText ; End
 	;--
+ENDC	
 	
 ; =============== SubModule_CutsceneRugalDefeat ===============
 ; This submodule handles the cutscene where Rugal dies.
@@ -3294,9 +3585,15 @@ SubModule_CutsceneRugalDefeat:
 	; ==============================
 	
 	; Load the cutscene font
+IF VER_EN
+	ld   a, $00 ; Tile ID Offset
+	ld   de, $9000
+	call Cutscene_InitFont
+ELSE
 	ld   hl, GFXDef_Cutscene_Font_RugalDefeat
 	ld   de, $9000
 	call CopyTilesAutoNum
+ENDC
 	
 	ld   a, LCDC_PRIORITY|LCDC_OBJENABLE|LCDC_OBJSIZE|LCDC_WTILEMAP|LCDC_ENABLE
 	rst  $18				; Resume LCD
@@ -3325,7 +3622,7 @@ SubModule_CutsceneRugalDefeat:
 	call Cutscene_DrawOpponentPicScreen
 	
 	; Load pic overlay object.
-	; This is a black square that covers the opponent pic (see also: Cutscene_BlinkPic).
+	; This is a black square that covers the opponent pic (see also: Cutscene03_BlinkPic).
 	ld   hl, GFX_Cutscene_PicBlink		; 2 black tiles
 	ld   de, $8000
 	call CopyTilesAutoNum
@@ -3340,6 +3637,19 @@ SubModule_CutsceneRugalDefeat:
 	ld   a, $FF
 	ldh  [rOBP0], a
 	
+IF VER_EN
+	;--
+	; Text 0
+	ld   hl, TextDef_CutsceneRugalDefeatEn0
+	ld   b, BANK(TextDef_CutsceneRugalDefeatEn0) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene03_PostTextWrite
+	call Cutscene03_ClearText
+	;--
+ELSE
 	;--
 	; #0 - Text 0
 	ld   de, Text_CutsceneRugalDefeat0
@@ -3353,6 +3663,7 @@ SubModule_CutsceneRugalDefeat:
 	call Cutscene03_PostTextWrite
 	call Cutscene03_ClearText
 	;--
+ENDC
 	
 	;--
 	; #1 - Start flashing the Omega Rugal pic.
@@ -3361,6 +3672,19 @@ SubModule_CutsceneRugalDefeat:
 	ld   [wCutBlinkPicMask], a
 	;--
 	
+IF VER_EN
+	;--
+	; Text 1
+	ld   hl, TextDef_CutsceneRugalDefeatEn1
+	ld   b, BANK(TextDef_CutsceneRugalDefeatEn1) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene03_PostTextWriteBlinkPic
+	call Cutscene03_ClearText
+	;--
+ELSE
 	;--
 	; #2 - Text 1
 	ld   de, Text_CutsceneRugalDefeat1
@@ -3399,6 +3723,7 @@ SubModule_CutsceneRugalDefeat:
 	call Cutscene03_PostTextWriteBlinkPic
 	call Cutscene03_ClearText
 	;--
+ENDC
 	
 	;--
 	; #5 - Flash faster
@@ -3409,6 +3734,19 @@ SubModule_CutsceneRugalDefeat:
 	call Task_PassControl_NoDelay
 	;--
 	
+IF VER_EN
+	;--
+	; Text 2
+	ld   hl, TextDef_CutsceneRugalDefeatEn2
+	ld   b, BANK(TextDef_CutsceneRugalDefeatEn2) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFastBlinkPic
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene03_PostTextWriteBlinkPic
+	call Cutscene03_ClearText
+	;--
+ELSE
 	;--
 	; #6 - Text 3
 	ld   de, Text_CutsceneRugalDefeat3
@@ -3445,16 +3783,33 @@ SubModule_CutsceneRugalDefeat:
 	call Cutscene03_PostTextWriteBlinkPic
 	call Cutscene03_ClearText
 	;--
+ENDC
 	
 	;--
 	; #9 - Flash faster
+IF VER_EN
+	ld   a, $03					; Flash every 4 frames
+ELSE
 	ld   a, $01					; Flash every other frame
+ENDC
 	ld   [wCutBlinkPicMask], a
 	ld   hl, (SGB_SND_B_WATERFALL << 8)|$03
 	call SGB_PrepareSoundPacketB
 	call Task_PassControl_NoDelay
 	;--
 	
+IF VER_EN
+	;--
+	; Text 3
+	ld   hl, TextDef_CutsceneRugalDefeatEn3
+	ld   b, BANK(TextDef_CutsceneRugalDefeatEn3) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFastBlinkPic
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene03_PostTextWriteBlinkPic
+	;--
+ELSE
 	;--
 	; #9 - Text 5
 	ld   de, Text_CutsceneRugalDefeat5
@@ -3467,6 +3822,7 @@ SubModule_CutsceneRugalDefeat:
 	ld   b, $B4
 	call Cutscene03_PostTextWriteBlinkPic
 	;--
+ENDC
 	
 	;--
 	; #A - Stop effects
@@ -3476,7 +3832,7 @@ SubModule_CutsceneRugalDefeat:
 	res  OSTB_VISIBLE, [hl]
 	
 	; Stop cutscene music
-	ld   a, $00
+	ld   a, SND_MUTE
 	call HomeCall_Sound_ReqPlayExId_Stub
 	
 	; and the SGB thunder-like effect
@@ -3519,10 +3875,18 @@ SubModule_CutsceneRugalDefeat:
 ; =============== Cutscene03_ClearText ===============
 ; Blank out any existing text.
 Cutscene03_ClearText:
-	; Clear all 4 rows
-	ld   hl, BGMap_Begin+$01C0 ; BG Ptr
+	; Clear all 4 rows (7 in the English version)
+IF VER_EN
+	ld   hl, BGMap_Begin+$0180 ; BG Ptr (En)
+ELSE
+	ld   hl, BGMap_Begin+$01C0 ; BG Ptr (Jp)
+ENDC
 	ld   b, $18	; Rect Width
-	ld   c, $04 ; Rect Height
+IF VER_EN
+	ld   c, $07 ; Rect Height (En)
+ELSE
+	ld   c, $04 ; Rect Height (Jp)
+ENDC
 	ld   d, $00 ; Tile ID
 	jp   FillBGRect
 	
@@ -3536,7 +3900,13 @@ Cutscene03_ClearText:
 Cutscene03_PostTextWrite:
 	; Check early abort
 	call Cutscene03_IsStartPressed	; Did anyone press START?
+IF VER_EN
+	jr   nc, .contWait				; If not, jump
+	call Task_PassControl_NoDelay	; Otherwise wait a frame, then return
+	ret
+ELSE
 	ret  c							; If so, return
+ENDC
 .contWait:
 	call Task_PassControl_NoDelay	; Wait frame
 	dec  b							; Are we done?
@@ -3552,10 +3922,16 @@ Cutscene03_PostTextWrite:
 Cutscene03_PostTextWriteBlinkPic:
 	; Check early abort
 	call Cutscene03_IsStartPressed	; Did anyone press START?
+IF VER_EN
+	jr   nc, .contWait				; If not, jump
+	call Task_PassControl_NoDelay	; Otherwise wait a frame, then return
+	ret
+ELSE
 	ret  c							; If so, return
+ENDC
 .contWait:
 	call Task_PassControl_NoDelay	; Wait frame
-	call Cutscene_BlinkPic			; Flash object
+	call Cutscene03_BlinkPic			; Flash object
 	dec  b							; Are we done?
 	jp   nz, Cutscene03_PostTextWriteBlinkPic	; If not, loop
 .end:
@@ -3582,11 +3958,11 @@ Cutscene03_IsStartPressed:
 	scf
 	ret
 	
-; =============== Cutscene_BlinkPic ===============
+; =============== Cutscene03_BlinkPic ===============
 ; Flashes Omega Rugal's pic.
 ; This is accomplished by quickly toggling wOBJInfo_PicBlink's visibility,
 ; which is a black square that fully covers the pic if visible.
-Cutscene_BlinkPic:
+Cutscene03_BlinkPic:
 	push af
 		push bc
 			push hl
@@ -3692,7 +4068,7 @@ TextPrinter_MultiFrame_WithSpeedup_BlinkPic:
 				.waitFrame:
 					push af
 						call Task_PassControl_NoDelay
-						call Cutscene_BlinkPic
+						call Cutscene03_BlinkPic
 					pop  af				
 					dec  a				; Waited all frames?
 					jp   nz, .delayLoop	; If not, loop
@@ -3711,7 +4087,7 @@ TextPrinter_MultiFrame_WithSpeedup_BlinkPic:
 	dec  c							; Copied all rows?
 	jr   nz, TextPrinter_MultiFrame_WithSpeedup_BlinkPic	; If not, loop
 	call Task_PassControl_NoDelay
-	call Cutscene_BlinkPic
+	call Cutscene03_BlinkPic
 	ret
 	
 GFX_Cutscene_PicBlink: mGfxDef "data/gfx/cutscene_picblink.bin"
@@ -3756,4 +4132,8 @@ INCLUDE "data/objlst/cutscene.asm"
 
 ; =============== END OF BANK ===============
 ; Junk area below.
+IF VER_EN
+	mIncJunk "L037C03"
+ELSE
 	mIncJunk "L037E61"
+ENDC

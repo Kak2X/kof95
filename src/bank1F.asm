@@ -2440,6 +2440,9 @@ INCLUDE "data/sound/sfx_unused_de.asm"
 ; Some moves (in particular those that have submoves) have CPU-specific
 ; code to randomize how to handle them.
 ;
+; The English version made introduced changes to the logic, which
+; made their way into all versions of 96.
+;
 ; IN
 ; - BC: Ptr to wPlInfo
 ; - DE: Ptr to respective wOBJInfo
@@ -2492,6 +2495,64 @@ ELSE
 	add  hl, bc
 	or   a, [hl]					; A |= Next damage value
 	jp   nz, Play_CPU_BlockAttack_ByDifficulty				; A != 0? If so, jump
+	
+IF VER_EN
+	; On HARD difficulty, several additional checks are made.
+	; The only check that remains in this block on EASY/NORMAL difficulties
+	; is the player distance one, which also activates closer to the opponent.
+	ld   a, [wDifficulty]
+	cp   DIFFICULTY_HARD		; Playing on HARD?
+	jp   nz, .valNormEasy		; If not, jump
+.valHard:
+	;
+	; HARD ONLY
+	;
+	
+	; If the opponent is invulnerable, move back
+	ld   hl, iPlInfo_Flags1Other
+	add  hl, bc
+	bit  PF1B_INVULN, [hl]
+	jp   nz, Play_CPU_SetJoyKeysB
+	
+	; If we're in the post-blockstun knockback, randomize return input
+	ld   hl, iPlInfo_MoveId
+	add  hl, bc
+	ld   a, [hl]
+	cp   MOVE_SHARED_POST_BLOCKSTUN			; During knockback?
+	jp   z, Play_CPU_OnBlockstunKnockback	; If so, jump
+	
+	; If we can cancel the current move into another, perform a random character-specific input
+	ld   hl, iPlInfo_Flags1
+	add  hl, bc
+	bit  PF1B_ALLOWHITCANCEL, [hl]
+	jp   nz, Play_CPU_SetRandCharInput
+	
+	; If we're within $20px from the opponent, try to perform a random action
+	ld   hl, iPlInfo_PlDistance
+	add  hl, bc
+	ld   a, [hl]
+	cp   $20						; iPlInfo_PlDistance < $20?
+	jp   c, Play_CPU_OnPlNear		; If so, jump
+	
+	;
+	; Every alternating $40 frames, perform a random character-specific input.
+	; Notably, this only happens here, with the HARD difficulty setting.
+	; On NORMAL and EASY, the CPU will never attack when far away.
+	;
+	ld   a, [wTimer]
+	bit  6, a
+	jp   nz, Play_CPU_SetRandCharInput
+	; Every alternating $80 frames that don't fall into the above check, try to jump forwards.
+	; This gives a window of opportunity for the jump to happen.
+	bit  7, a
+	jp   nz, Play_CPU_SetJoyKeysJumpUF
+	
+	jp   .idle
+.valNormEasy:
+	;
+	; NORMAL/EASY ONLY
+	;
+ENDC
 	
 	; If we're within $1Apx from the opponent, try to perform a random action
 	ld   hl, iPlInfo_PlDistance
@@ -2698,13 +2759,22 @@ Play_CPU_OnPlNear:
 	cp   a, STAGESEQ_SAISYU	; Are we in a boss or extra stages?
 	jp   nc, .hardest		; If so, jump
 	
+IF VER_EN
+	; If we're in the post-blockstun knockback, randomize return input
+	ld   hl, iPlInfo_MoveId
+	add  hl, bc
+	ld   a, [hl]
+	cp   MOVE_SHARED_POST_BLOCKSTUN		; During knockback?
+	jp   z, Play_CPU_SetRandCharInput	; If so, jump
+ELSE
 	; If we're crouch-blocking, randomize return input
 	ld   hl, iPlInfo_MoveId
 	add  hl, bc
 	ld   a, [hl]
-	cp   MOVE_SHARED_BLOCK_C		; During knockback?
+	cp   MOVE_SHARED_BLOCK_C			; During knockback?
 	jp   z, Play_CPU_SetRandCharInput	; If so, jump
-	
+ENDC
+
 	; Allow the CPU to do something the next frame
 	ld   hl, iPlInfo_CPUWaitTimer
 	add  hl, bc
@@ -2725,6 +2795,14 @@ Play_CPU_OnPlNear:
 	bit  PF1B_ALLOWHITCANCEL, [hl]
 	jp   nz, Play_CPU_SetRandCharInput
 	
+IF VER_EN
+	; If we're in the post-blockstun knockback, randomize return input (respecting easy moves mode)
+	ld   hl, iPlInfo_MoveId
+	add  hl, bc
+	ld   a, [hl]
+	cp   MOVE_SHARED_POST_BLOCKSTUN			; During knockback?
+	jp   z, Play_CPU_OnBlockstunKnockback	; If so, jump
+ELSE
 	; If we're blocking randomize return input
 	ld   hl, iPlInfo_MoveId
 	add  hl, bc
@@ -2733,17 +2811,28 @@ Play_CPU_OnPlNear:
 	jp   z, Play_CPU_SetRandCharInput	; If so, jump
 	cp   MOVE_SHARED_BLOCK_C			; During knockback?
 	jp   z, Play_CPU_SetRandCharInput	; If so, jump
-	
+ENDC
+
 	; Allow the CPU to do something the next frame
 	ld   hl, iPlInfo_CPUWaitTimer
 	add  hl, bc
 	ld   a, $00
 	ld   [hl], a
 	
+IF VER_EN
+	; If the opponent is invulnerable, try to walk back outside of the "near" range.
+	ld   hl, iPlInfo_Flags1Other
+	add  hl, bc
+	bit  PF1B_INVULN, [hl]
+	jp   nz, Play_CPU_BlockAttack_ByDifficulty
+	
+	; 0% chance of not doing anything.
+ELSE
 	; ~2% chance of not doing anything
 	call Rand
 	cp   a, $05
 	ret  c
+ENDC
 	
 .doAction:
 	
@@ -2754,9 +2843,15 @@ Play_CPU_OnPlNear:
 	;
 	
 	call Rand
-	; ~15.5% chance -> 25% chance of heavy punch
+	; ~15.5% chance -> (EN) 15.5% chance of strike attack
+	;                  (JP) 25% change heavy punch
 	cp   $28
+	jp   c, Play_CPU_SetJoyKeysStrike_C12
+IF VER_EN
+	; ~8%    chance -> 25% chance of heavy punch
+	cp   $3C
 	jp   c, Play_CPU_SetJoyKeysHP_C25
+ENDC
 	; ~8%    chance -> 25% chance of light punch
 	cp   $50
 	jp   c, Play_CPU_SetJoyKeysLP_C25
@@ -2777,6 +2872,35 @@ Play_CPU_OnPlNear:
 	jp   c, Play_CPU_SetJoyKeysB_HP_C50
 	; ~14%   chance -> Nothing
 	ret
+	
+IF VER_EN
+; =============== Play_CPU_OnBlockstunKnockback ===============
+; Handles the logic when in the middle of knockback after blockstun.
+; These attempt to set a character-specific input that may take effect 
+; as soon as knockback ends if something else doesn't write to the key buffer.
+Play_CPU_OnBlockstunKnockback:
+
+	;
+	; Without easy moves active, fall back to Play_CPU_SetRandCharInput
+	;
+	ld   a, [wDipSwitch]
+	bit  DIPB_EASY_MOVES, a				; Is the easy moves cheat enabled?
+	jp   z, Play_CPU_SetRandCharInput	; If not, jump
+	
+.powerup:
+	ld   a, [wTimer]
+	bit  0, a			; Every other frame
+	jp   nz, .superH
+.superL:
+	ld   a, $01	; Use input #1
+	scf
+	ccf	; Use light version (#0)
+	jp   Play_CPU_ApplyCharInput
+.superH:
+	ld   a, $01	; Use input #2
+	scf	; Use heavy version (#1)
+	jp   Play_CPU_ApplyCharInput
+ENDC
 	
 ; =============== Play_CPU_SetRandCharInput ===============
 ; Makes the CPU perform a random special move input / character-specific move input
@@ -2800,6 +2924,45 @@ Play_CPU_SetRandCharInput:
 	ccf			; Use light version (#0)
 	jp   Play_CPU_ApplyCharInput
 	
+IF VER_EN
+; =============== Play_CPU_BlockAttack_ByDifficulty ===============
+; Makes the opponent block the active attack (or, if we got here with no attack,
+; to walk back away from the opponent), with difficulty-specific logic.
+; - EASY and NORMAL both randomize between blocking mid and low every $40 frames.
+;   How they differ is the action they perform every $80 frames:
+;   - On EASY, the CPU will not block at all (early return)
+;   - On NORMAL, the CPU will always block properly.
+; - HARD makes the CPU always block properly, see Play_CPU_BlockAttack for more info.
+;
+; This is very similar to 96's version, but not exactly.
+Play_CPU_BlockAttack_ByDifficulty:
+	; Determine which difficulty we're in.
+	ld   a, [wDifficulty]
+	cp   DIFFICULTY_HARD			; On HARD difficulty?
+	jp   z, Play_CPU_BlockAttack	; If so, jump
+	cp   DIFFICULTY_NORMAL			; On NORMAL difficulty?
+	jp   z, .norm					; If so, jump
+									; Otherwise, we're on EASY
+.easy:
+	; Return every alternating $80 frames
+	ld   a, [wTimer]
+	bit  7, a
+	ret  nz
+	; Every $40 frames, alternate between crouch block and block
+	bit  6, a
+	jp   z, Play_CPU_SetJoyKeysDB
+	jp   Play_CPU_SetJoyKeysB
+.norm:
+	; Every alternating $80 frames, perform the proper block action.
+	; 96 changed this to return every alternating $40 frames.
+	ld   a, [wTimer]
+	bit  7, a
+	jp   z, Play_CPU_BlockAttack
+	; Every $40 frames, alternate between crouch block and block
+	bit  6, a
+	jp   z, Play_CPU_SetJoyKeysDB
+	jp   Play_CPU_SetJoyKeysB
+ELSE
 ; =============== Play_CPU_BlockAttack_ByDifficulty ===============
 ; Makes the opponent block the active attack (or, if we got here with no attack, to walk back away from the opponent), with difficulty-specific logic.
 ; There is a base 20% chance of not blocking the attack.
@@ -2819,10 +2982,20 @@ Play_CPU_BlockAttack_ByDifficulty:
 	ret  nc					; If so, return
 .chance20:
 	; Fall-through
+ENDC
 	
 ; =============== Play_CPU_BlockAttack_C20 ===============
 ; Makes the opponent block the attack, with a 20% chance of not doing anything.
+; In the English version, this is a 15% chance, as in 96.
 Play_CPU_BlockAttack_C20:
+IF VER_EN
+	;
+	; ~15.6% chance of not doing anything
+	;
+	call Rand	; A = Rand
+	cp   $28	; A < $28?
+	ret  c		; If so, return
+ELSE
 	;
 	; ~19.5% chance of not doing anything
 	;
@@ -2834,6 +3007,7 @@ Play_CPU_BlockAttack_C20:
 	cp   $32	
 	jr   c, Play_CPU_Dodge
 	;--
+ENDC
 	; Fall-through
 	
 ; =============== Play_CPU_BlockAttack ===============
@@ -2867,7 +3041,11 @@ Play_CPU_BlockAttack:
 	
 	;
 	; Otherwise, this is an unblockable. Take the hit.
+	; (In the English version and 96, try to block it anyway)
 	;
+IF VER_EN
+	jp   Play_CPU_SetJoyKeysB
+ENDC
 	ret
 	
 ; =============== Play_CPU_CheckProj ===============	
@@ -2878,11 +3056,75 @@ Play_CPU_CheckProj:
 	;
 	ld   a, [wDifficulty]
 	cp   DIFFICULTY_EASY			; Playing on EASY?
-	jp   nz, .chkShortcuts			; If not, skip
+	jp   nz, .chkAthenaCrystalBit	; If not, skip
 	ld   a, [wTimer]
 	cp   $80						; wTimer < $80?
 	ret  c							; If so, return
 	
+.chkAthenaCrystalBit:
+
+; The English version is almost identical to 96's iteration.
+IF VER_EN
+	;
+	; Start spamming user moves if we're on HARD and attempting to hit the CPU 
+	; with Athena's normal super.
+	; Note the desperation version is unaffected.
+	;
+	
+	ld   a, [wDifficulty]
+	cp   DIFFICULTY_HARD				; Playing on HARD?
+	jp   nz, .norm						; If not, skip
+	
+	ld   hl, iPlInfo_CharIdOther
+	add  hl, bc
+	ld   a, [hl]
+	cp   CHAR_ID_ATHENA					; Opponent is Athena?
+	jp   nz, .chkShortcuts				; If not, skip
+	
+	ld   hl, iPlInfo_MoveIdOther
+	add  hl, bc
+	ld   a, [hl]
+	cp   a, MOVE_ATHENA_SHINING_CRYSTAL_BIT_GS	; Opponent is doing a normal super?
+	jp   z, Play_CPU_SetRandCharInputH			; If so, jump
+
+.chkShortcuts:
+
+	;
+	; Handle the projectile distance checks differently with move shortcuts enabled.
+	;
+	ld   a, [wDipSwitch]
+	bit  DIPB_EASY_MOVES, a	; Is the easy moves cheat enabled?
+	jp   z, .norm			; If not, jump
+	
+.powerup:	
+	;
+	; If we pressed any attack button in the last few frames but no attack started,
+	; perform a crouching light punch.
+	; Note that switching to a new move, most of the time, clears iPlInfo_JoyBufKeysLH.
+	;
+	ld   hl, iPlInfo_JoyBufKeysLH
+	add  hl, bc
+	ld   a, [hl]
+	and  a, KEP_A_LIGHT|KEP_B_LIGHT|KEP_A_HEAVY|KEP_B_HEAVY	; Are we pressing any button already?
+	jp   nz, Play_CPU_SetJoyKeysC_LP_C25					; If so, jump
+	
+	;
+	; Check distance with enemy projectile.
+	;
+	ld   hl, iPlInfo_ProjDistance
+	add  hl, bc
+	ld   a, [hl]
+	; Crouching light punch if distance >= $46
+	cp   $46
+	jp   nc, Play_CPU_SetJoyKeysC_LP_C25
+	; Block/Dodge if distance in range $32-$45
+	cp   $32
+	jp   nc, Play_CPU_Dodge
+	; Block or jump back if distance < $32
+	jr   Play_CPU_BlockAttack
+.norm:
+ELSE
+
 .chkShortcuts:
 	;
 	; On HARD difficulty, if the move shortcuts are enabled, always crouch
@@ -2897,35 +3139,47 @@ Play_CPU_CheckProj:
 	ld   a, [wDipSwitch]
 	bit  DIPB_EASY_MOVES, a					; Are the move shortcuts enabled?
 	jp   nz, Play_CPU_SetJoyKeysC_LP_C25	; If so, jump
-	
 .chkDistance:
+ENDC
+
 	;
 	; Check distance with enemy projectile.
 	;
 	ld   hl, iPlInfo_ProjDistance
 	add  hl, bc
 	ld   a, [hl]
-	; Random heavy special move if distance >= $55
+	; Do a random character-specific input if distance >= $55
 	cp   $55
 	jp   nc, Play_CPU_SetRandCharInputH
-	; Forward jump if distance >= $46
+	; Jump forward if distance in range $46-$54
 	cp   $46
 	jp   nc, Play_CPU_SetJoyKeysJumpUF
-	; Block/Dodge if distance in range $32-$45
+	; Block/Dodge if distance < $32
 	cp   $32
 	jp   c, Play_CPU_Dodge
-	; Block if distance < $32
+	; Block or jump back if distance in range $32-$45
+IF VER_EN
+	jp   Play_CPU_BlockAttack_C20
+ELSE
 	jr   Play_CPU_BlockAttack_C20
-	
-; =============== Play_CPU_Dodge ===============
-; Makes the CPU perform the input to dodge the attack, with a 20% chance of blocking instead.
-Play_CPU_Dodge:
+ENDC
 
+; =============== Play_CPU_Dodge ===============
+; Makes the CPU perform the input to dodge the attack.
+; On the EASY and NORMAL difficulties, there's a 20% chance of blocking the attack instead.
+; On HARD, the dodge always happens.
+Play_CPU_Dodge:
+IF VER_EN
+	ld   a, [wDifficulty]
+	cp   DIFFICULTY_HARD	; Playing on HARD?
+	jp   z, .noBlock		; If so, skip
+ENDC
 	; ~20% chance of blocking/walking back immediately
 	call Rand
 	cp   $32
 	jp   c, Play_CPU_BlockAttack
-	
+.noBlock:
+
 	; If the CPU is currently dodging, don't press anything
 	ld   hl, iPlInfo_MoveId
 	add  hl, bc
@@ -3044,6 +3298,37 @@ Play_CPU_SetJoyKeysLP_C25:
 	xor  a ; KEY_NONE
 	ld   d, KEP_B_LIGHT
 	jp   Play_CPU_SetJoyKeys
+
+; =============== Play_CPU_SetJoyKeysStrike_C12 ===============
+; Makes the CPU perform a standing heavy punch input.
+Play_CPU_SetJoyKeysStrike_C12:
+IF VER_EN
+	ld   a, [wDifficulty]
+	cp   DIFFICULTY_HARD
+	jp   z, .setKeys
+	call Rand
+	bit  0, a
+	ret  z
+	bit  1, a
+	ret  z
+.setKeys:
+	; 50% chance of actually performing the strike input, since it requires
+	; holding forwards, but L/R is randomized depending on the timer.
+	
+	; Every other frame...
+	ld   a, [wTimer]
+	bit  0, a			
+	jp   nz, .setL
+.setR:
+	ld   a, KEY_RIGHT	; A+B+Left
+	jp   .end
+.setL:
+	ld   a, KEY_LEFT	; A+B+Right
+.end:
+	ld   d, KEP_A_LIGHT|KEP_B_LIGHT|KEP_A_HEAVY|KEP_B_HEAVY
+	jp   Play_CPU_SetJoyKeys
+ENDC
+
 ; =============== Play_CPU_SetJoyKeysHP_C25 ===============
 ; Makes the CPU perform a standing heavy punch input.
 Play_CPU_SetJoyKeysHP_C25:
@@ -3074,6 +3359,7 @@ Play_CPU_SetJoyKeysC_LP_C25:
 	ld   a, KEY_DOWN
 	ld   d, KEP_B_LIGHT
 	jp   Play_CPU_SetJoyKeys
+	
 ; =============== Play_CPU_Unused_SetJoyKeysC_HP_C25 ===============
 ; [TCRF] Unreferenced code.
 ; Makes the CPU perform a crouching heavy punch input.
@@ -3104,7 +3390,7 @@ Play_CPU_SetJoyKeysHK:
 	xor  a ; KEY_NONE
 	ld   d, KEP_A_HEAVY
 	jp   Play_CPU_SetJoyKeys
-	
+
 ; =============== Play_CPU_SetJoyKeysB ===============
 ; Makes the CPU input back.
 Play_CPU_SetJoyKeysB:
@@ -3198,6 +3484,14 @@ Play_CPU_SetJoyKeys:
 ; -> DF+B
 ; With MoveInput_DF defining DF and iCPUMoveListItem_LastLHKey* being KEP_B_LIGHT.
 ;
+; In the English version, the MoveInput data doesn't necessarily have to point to a d-pad motion.
+; If in the second byte, iCPUMoveListItem_LastLHKeyA, the flag CML_BTN is set, the
+; MoveInput is treated as a button-based input (ie: pressing B 3 times).
+; Since this has to be defined manually, it should be consistent with the MoveInput. 
+;
+; Regardless of that, iCPUMoveListItem_LastLHKey* will always be a punch or kick input
+; in LH format (for iPlInfo_JoyNewKeysLH), with the CML_BTN flag stripped out.
+;
 ; Notice that there are two possible inputs the game can choose.
 ; Which one is picked depends on the C flag passed to the subroutine, which is arbitrary
 ; for every point that calls this.
@@ -3259,26 +3553,86 @@ Play_CPU_ApplyCharInput:
 		inc  hl
 		ld   d, [hl]
 		inc  hl
+	;
+	; [TCRF] The English version of 95 (and 96) make a distinction here between move inputs that contain directional
+	;        keys and those that don't, depending on the depending on the CMLB_BTN flag being set on the input's byte2.
+	;
+	;        This is important because there are separate input buffers for those.
+	;
+	;        The code is incomplete in the Japanese version though -- that flag and its respective checks doen't exist,
+	;        so it always writes to the buffer meant for directional keys, which means the CPU will fail to perform 
+	;        anything requiring MoveInput_PPP!
+	;		
+	IF VER_EN
+		; [byte2] A = iCPUMoveListItem_LastLHKeyA
+		;         For now, this is strictly used for the CML_BTN flag,
+		;         which tells if this or the next value should be used as iPlInfo_JoyNewKeysLH
+		ld   a, [hl]		; Read out byte2 to A
 		
-		; Currently on [byte2]
+		push hl ; Save the ptr to iCPUMoveListItem_LastLHKeyA
+		
+			;
+			; Determine what kind of MoveInput we're dealing with.
+			; If A has CMLB_BTN set, treat the input as contining LH punch/kick buttons (.inptBtn)
+			; Otherwise, treat it as containing d-pad keys (.inptDir).
+			;
+			; Note that the Play_CPU_ApplyMoveInput* subroutine called is the only difference
+			; between .inptDir and .inptBtn.
+			; Everything below that call is identical.
+			;
 	
+
+			; Move this to HL for Play_CPU_ApplyMoveInput*
+			push de			
+			pop  hl
+	
+			bit  CMLB_BTN, a	; Is the flag set?
+			jp   nz, .inptBtn	; If so, jump		
+		.inptDir:
+			
+			;
+			; Apply MoveInput to iPlInfo_JoyDirBuffer
+			;
+			call Play_CPU_ApplyMoveInputDir
+			
+			;
+			; Determine which LH input to use for the button, then filter it and apply it.
+			;
+			
+			; After the pop, HL will point to input #0.
+			; If the C flag passed to the subroutine is set, increment HL once
+			; to make it point to input #1.
+		pop  hl				; HL = Ptr to iCPUMoveListItem_LastLHKeyA (#0)
+	pop  af					; C flag = If set, use input #1
+	jp   nc, .inptDir_setLH	; Is it set? If not, skip (use #0)
+	inc  hl					; Otherwise, seek to #1 (iCPUMoveListItem_LastLHKeyB)
+.inptDir_setLH:
+	ld   a, [hl]			; Read LH input value
+	and  a, $FF^CML_BTN		; Remove CML_BTN flag since it has another purpose
+	ld   d, a				; D = LH Input
+	ld   a, KEY_NONE		; A = Nothing
+	jp   Play_CPU_SetJoyKeys
+	
+.inptBtn:
+			call Play_CPU_ApplyMoveInputBtn
+			; Rest is identical to above
+		pop  hl
+	pop  af
+	jp   nc, .inptBtn_setLH
+	inc  hl
+.inptBtn_setLH:
+	ld   a, [hl]
+	and  a, $FF^CML_BTN			
+	ld   d, a
+	ld   a, KEY_NONE
+	jp   Play_CPU_SetJoyKeys
+ELSE		
+		; Currently on [byte2]
 		push hl ; Save the ptr to iCPUMoveListItem_LastLHKeyA
 			
 			; Move this to HL for Play_CPU_ApplyMoveInput*
 			push de
 			pop  hl
-			
-			;
-			; [TCRF] 96 makes a distinction here between move inputs that contain directional keys and those that don't.
-			;        That game will write the inputs to the proper buffer, depending on the CMLB_BTN flag
-			;        being set on the input's byte2. 
-			;
-			;        And 95? That flag and its respective checks doen't exist, so it always writes to the buffer meant for
-			;        directional keys, which means the CPU will fail to perform anything requiring MoveInput_PPP!
-			;
-			;        And yet, the subroutine Play_CPU_Unused_ApplyMoveInputBtn still exists,
-			;        unreferenced, and identical to the version used in 96.
-			;
 			
 		.inptDir:
 			
@@ -3303,16 +3657,17 @@ Play_CPU_ApplyCharInput:
 	ld   a, KEY_NONE		; A = Nothing
 	ld   d, [hl]			; Read LH input value
 	jp   Play_CPU_SetJoyKeys
+ENDC
 	
-; =============== Play_CPU_Unused_ApplyMoveInputBtn ===============
-; [TCRF] Unreferenced in this game.
-;
+; =============== Play_CPU_ApplyMoveInputBtn ===============
 ; Writes the "old" joypad keys values for buttons.
 ;
 ; This copies the inputs from a MoveInfo to the input buffer of A/B button keys.
+;
+; [TCRF] Unreferenced in the Japanese version, but it still exists.
 ; IN
 ; - HL: Ptr to a MoveInput structure containing only button inputs.
-Play_CPU_Unused_ApplyMoveInputBtn:
+Play_CPU_ApplyMoveInputBtn:
 	push bc
 		push de
 			; Move the ptr to DE
@@ -3458,17 +3813,32 @@ CPU_MoveListPtrTable:
 	
 ; =============== CPU_MoveInputList_* ===============
 ; List of character-specific move inputs.
+; The English version mostly switches around some slots and adds in the CML_BTN flags.
+; The slot changes were likely made due to the addition of Play_CPU_OnBlockstunKnockback,
+; which tries to guard-cancel using the entry in slot #1.
 ; See also: Play_CPU_ApplyCharInput for more info.
 CPU_MoveInputList_Kyo:
-	; FDF+P -> 100 Shiki Oni Yaki
-	dw MoveInput_FDF
-	db KEP_B_LIGHT
-	db KEP_B_HEAVY
-
+IF VER_EN
 	; DF+P -> 108 Shiki Yami Barai
 	dw MoveInput_DF
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
+	
+	; FDF+P -> 100 Shiki Oni Yaki
+	dw MoveInput_FDF
+	db KEP_B_LIGHT
+	db KEP_B_HEAVY
+ELSE
+	; FDF+P -> 100 Shiki Oni Yaki
+	dw MoveInput_FDF
+	db KEP_B_LIGHT
+	db KEP_B_HEAVY
+	
+	; DF+P -> 108 Shiki Yami Barai
+	dw MoveInput_DF
+	db KEP_B_LIGHT
+	db KEP_B_HEAVY
+ENDC
 
 	; BDB+K -> 101 Shiki Oboro Guruma
 	dw MoveInput_BDB
@@ -3547,20 +3917,34 @@ CPU_MoveInputList_Ryo:
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
 
+IF VER_EN
+	; FDF+P -> Ko Hou
+	dw MoveInput_FDF
+	db KEP_B_LIGHT
+	db KEP_B_HEAVY
+ELSE
 	; BF+K -> Hien Shippuu Kyaku
 	dw MoveInput_BF_Charge
 	db KEP_A_LIGHT
 	db KEP_A_HEAVY
+ENDC
 
 	; FDB+P -> Zanretsuken
 	dw MoveInput_FDB
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
 
+IF VER_EN
+	; BF+K -> Hien Shippuu Kyaku
+	dw MoveInput_BF_Charge
+	db KEP_A_LIGHT
+	db KEP_A_HEAVY
+ELSE
 	; FDF+P -> Ko Hou
 	dw MoveInput_FDF
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
+ENDC
 
 	; DF+P -> Ko Ou Ken
 	dw MoveInput_DF
@@ -3588,20 +3972,34 @@ CPU_MoveInputList_Yuri:
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
 
+IF VER_EN
+	; FDF+P -> Kuu Ga
+	dw MoveInput_FDF
+	db KEP_B_LIGHT
+	db KEP_B_HEAVY
+ELSE
 	; DB+P -> Sai Ha
 	dw MoveInput_DB
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
+ENDC
 
 	; FDB+P -> Hyaku Retsu Binta
 	dw MoveInput_FDB
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
 
+IF VER_EN
+	; DB+P -> Sai Ha
+	dw MoveInput_DB
+	db KEP_B_LIGHT
+	db KEP_B_HEAVY
+ELSE
 	; FDF+P -> Kuu Ga
 	dw MoveInput_FDF
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
+ENDC
 
 	; DF+K -> Rai'oh Ken
 	dw MoveInput_DF
@@ -3629,20 +4027,34 @@ CPU_MoveInputList_Terry:
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
 
+IF VER_EN
+	; DU+P -> Rising Tackle
+	dw MoveInput_DU_Charge
+	db KEP_B_LIGHT
+	db KEP_B_HEAVY
+ELSE
 	; DB+P -> Burn Knuckle
 	dw MoveInput_DB
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
+ENDC
 
 	; DB+K -> Crack Shot
 	dw MoveInput_DB
 	db KEP_A_LIGHT
 	db KEP_A_HEAVY
 
+IF VER_EN
+	; DB+P -> Burn Knuckle
+	dw MoveInput_DB
+	db KEP_B_LIGHT
+	db KEP_B_HEAVY
+ELSE
 	; DU+P -> Rising Tackle
 	dw MoveInput_DU_Charge
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
+ENDC
 
 	; FDF+K -> Power Dunk
 	dw MoveInput_FDF
@@ -3654,10 +4066,17 @@ CPU_MoveInputList_Terry:
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
 
+IF VER_EN
+	; FDF+P -> [BUG] Power Wave, likely meant to be Power Dunk though.
+	dw MoveInput_FDF
+	db KEP_B_LIGHT
+	db KEP_B_HEAVY
+ELSE
 	; DB+P -> Burn Knuckle
 	dw MoveInput_DB
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
+ENDC
 
 	; DBDF+P -> Power Geyser
 	dw MoveInput_DBDF
@@ -3670,20 +4089,34 @@ CPU_MoveInputList_Joe:
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
 
-	; BF+K -> Slash Kick
-	dw MoveInput_BF
-	db KEP_A_LIGHT
-	db KEP_A_HEAVY
-
-	; PPP -> Bakuretsuken 
-	dw MoveInput_PPP
-	db KEP_B_LIGHT
-	db KEP_B_HEAVY
-
+IF VER_EN
 	; DF+K -> Tiger Kick
 	dw MoveInput_DF
 	db KEP_A_LIGHT
 	db KEP_A_HEAVY
+ELSE
+	; BF+K -> Slash Kick
+	dw MoveInput_BF
+	db KEP_A_LIGHT
+	db KEP_A_HEAVY
+ENDC
+
+	; PPP -> Bakuretsuken 
+	dw MoveInput_PPP
+	db KEP_B_LIGHT|CML_BTN
+	db KEP_B_HEAVY
+
+IF VER_EN
+	; BF+K -> Slash Kick
+	dw MoveInput_BF
+	db KEP_A_LIGHT
+	db KEP_A_HEAVY
+ELSE
+	; DF+K -> Tiger Kick
+	dw MoveInput_DF
+	db KEP_A_LIGHT
+	db KEP_A_HEAVY
+ENDC
 
 	; DB+K -> Ougon no Kakato
 	dw MoveInput_DB
@@ -3749,7 +4182,7 @@ CPU_MoveInputList_Heidern:
 CPU_MoveInputList_Ralf:
 	; PPP -> Vulcan Punch
 	dw MoveInput_PPP
-	db KEP_B_LIGHT
+	db KEP_B_LIGHT|CML_BTN
 	db KEP_B_HEAVY
 
 	; BF+P -> Gatling Attack
@@ -3767,10 +4200,17 @@ CPU_MoveInputList_Ralf:
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
 
+IF VER_EN
+	; BDF+K -> Super Argentine Back Breaker
+	dw MoveInput_BDF
+	db KEP_A_LIGHT
+	db KEP_A_HEAVY
+ELSE
 	; PPP -> Vulcan Punch
 	dw MoveInput_PPP
-	db KEP_B_LIGHT
+	db KEP_B_LIGHT|CML_BTN
 	db KEP_B_HEAVY
+ENDC
 
 	; BF+P -> Gatling Attack
 	dw MoveInput_BF_Charge
@@ -3788,20 +4228,33 @@ CPU_MoveInputList_Ralf:
 	db KEP_B_HEAVY
 
 CPU_MoveInputList_Athena:
+
 	; DB+P -> Psycho Ball
 	dw MoveInput_DB
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
-
-	; BDF+K -> Psycho Reflector
-	dw MoveInput_BDF
-	db KEP_A_LIGHT
-	db KEP_A_HEAVY
-
+	
+IF VER_EN
 	; FDF+P -> Psycho Sword
 	dw MoveInput_FDF
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
+	
+	; BDF+K -> Psycho Reflector
+	dw MoveInput_BDF
+	db KEP_A_LIGHT
+	db KEP_A_HEAVY
+ELSE
+	; BDF+K -> Psycho Reflector
+	dw MoveInput_BDF
+	db KEP_A_LIGHT
+	db KEP_A_HEAVY
+	
+	; FDF+P -> Psycho Sword
+	dw MoveInput_FDF
+	db KEP_B_LIGHT
+	db KEP_B_HEAVY
+ENDC
 
 	; DB+P -> Psycho Ball
 	dw MoveInput_DB
@@ -3818,10 +4271,17 @@ CPU_MoveInputList_Athena:
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
 
-	; DB+P -> Psycho Ball
+IF VER_EN
+	; BDF+K -> Psycho Reflector
+	dw MoveInput_BDF
+	db KEP_A_LIGHT
+	db KEP_A_HEAVY
+ELSE
+	; BDF+P -> [BUG] Nothing
 	dw MoveInput_BDF
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
+ENDC
 
 	; BFDB+P -> Shining Crystal Bit
 	dw MoveInput_BFDB
@@ -3916,20 +4376,34 @@ CPU_MoveInputList_Mai:
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
 
+IF VER_EN
+	; FDF+K -> Hisho Ryu En Jin
+	dw MoveInput_FDF
+	db KEP_A_LIGHT
+	db KEP_A_HEAVY
+ELSE
 	; BDF+K -> Hissatsu Shinobibachi
 	dw MoveInput_BDF
 	db KEP_A_LIGHT
 	db KEP_A_HEAVY
+ENDC
 
 	; DB+P -> Ryu En Bu
 	dw MoveInput_DB
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
-
+	
+IF VER_EN
+	; BDF+K -> Hissatsu Shinobibachi
+	dw MoveInput_BDF
+	db KEP_A_LIGHT
+	db KEP_A_HEAVY
+ELSE
 	; FDF+K -> Hisho Ryu En Jin
 	dw MoveInput_FDF
 	db KEP_A_LIGHT
 	db KEP_A_HEAVY
+ENDC
 
 	; DU+P -> Chijou Musasabi no Mai
 	dw MoveInput_DU_Charge
@@ -3947,6 +4421,17 @@ CPU_MoveInputList_Mai:
 	db KEP_A_HEAVY
 
 CPU_MoveInputList_Iori:
+IF VER_EN
+	; DF+P -> 108 Shiki Yami-barai
+	dw MoveInput_DF
+	db KEP_B_LIGHT
+	db KEP_B_HEAVY
+	
+	; FDF+P -> 100 Shiki Oni Yaki
+	dw MoveInput_FDF
+	db KEP_B_LIGHT
+	db KEP_B_HEAVY
+ELSE
 	; FDF+P -> 100 Shiki Oni Yaki
 	dw MoveInput_FDF
 	db KEP_B_LIGHT
@@ -3956,6 +4441,7 @@ CPU_MoveInputList_Iori:
 	dw MoveInput_DF
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
+ENDC
 
 	; DB+P -> 127 Aoi Hana
 	dw MoveInput_DB
@@ -3992,11 +4478,18 @@ CPU_MoveInputList_Eiji:
 	dw MoveInput_DF
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
-
+	
+IF VER_EN
+	; DB+K -> Kage Utsushi
+	dw MoveInput_DB
+	db KEP_A_LIGHT
+	db KEP_A_HEAVY
+ELSE
 	; FDB+K -> Kotsu Hazaki Kiri
 	dw MoveInput_FDB
 	db KEP_A_LIGHT
 	db KEP_A_HEAVY
+ENDC
 
 	; BDF+P -> Ryuu Eijin
 	dw MoveInput_BDF
@@ -4013,10 +4506,17 @@ CPU_MoveInputList_Eiji:
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
 
+IF VER_EN
+	; FDB+K -> Kotsu Hazaki Kiri
+	dw MoveInput_FDB
+	db KEP_A_LIGHT
+	db KEP_A_HEAVY
+ELSE
 	; DB+K -> Kage Utsushi
 	dw MoveInput_DB
 	db KEP_A_LIGHT
 	db KEP_A_HEAVY
+ENDC
 
 	; DF+K -> Tenbakyaku
 	dw MoveInput_DF
@@ -4034,30 +4534,51 @@ CPU_MoveInputList_Billy:
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
 
+IF VER_EN
+	; BDF+P -> Sansetsu Kon Chuudan Uchi
+	dw MoveInput_BDF
+	db KEP_A_LIGHT
+	db KEP_A_HEAVY
+ELSE
 	; PPP -> Senpuu Kon
 	dw MoveInput_PPP
-	db KEP_B_LIGHT
+	db KEP_B_LIGHT|CML_BTN
 	db KEP_B_HEAVY
+ENDC
 
 	; DB+P -> Suzume Otoshi
 	dw MoveInput_DB
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
 
+IF VER_EN
+	; PPP -> Senpuu Kon
+	dw MoveInput_PPP
+	db KEP_B_LIGHT|CML_BTN
+	db KEP_B_HEAVY
+ELSE
 	; BDF+P -> Sansetsu Kon Chuudan Uchi
 	dw MoveInput_BDF
 	db KEP_A_LIGHT
 	db KEP_A_HEAVY
+ENDC
 
 	; BDF+P -> Sansetsu Kon Chuudan Uchi
 	dw MoveInput_BDF
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
-
-	; PPP -> Senpuu Kon
-	dw MoveInput_PPP
+	
+IF VER_EN
+	; DB+P -> Suzume Otoshi
+	dw MoveInput_DB
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
+ELSE
+	; PPP -> Senpuu Kon
+	dw MoveInput_PPP
+	db KEP_B_LIGHT|CML_BTN
+	db KEP_B_HEAVY
+ENDC
 
 	; BDF+K -> Kyoushuu Hishou Kon
 	dw MoveInput_BDF
@@ -4116,20 +4637,34 @@ CPU_MoveInputList_Rugal:
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
 
+IF VER_EN
+	; DB+K -> Genocide Cutter
+	dw MoveInput_DB
+	db KEP_A_LIGHT
+	db KEP_A_HEAVY
+ELSE
 	; FDB+P -> God Press
 	dw MoveInput_FDB
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
+ENDC
 
 	; DF+K -> Dark Barrier
 	dw MoveInput_DF
 	db KEP_A_LIGHT
 	db KEP_A_HEAVY
-
+	
+IF VER_EN
+	; FDB+P -> God Press
+	dw MoveInput_FDB
+	db KEP_B_LIGHT
+	db KEP_B_HEAVY
+ELSE
 	; DB+K -> Genocide Cutter
 	dw MoveInput_DB
 	db KEP_A_LIGHT
 	db KEP_A_HEAVY
+ENDC
 
 	; FBDF+P -> Kaiser Wave
 	dw MoveInput_FBDF
@@ -4157,20 +4692,34 @@ CPU_MoveInputList_Nakoruru:
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
 
+IF VER_EN
+	; DF+P -> Lela Mutsube (Upwards Dash)
+	dw MoveInput_DF
+	db KEP_B_LIGHT
+	db KEP_B_HEAVY
+ELSE
 	; BD+P -> Annu Mutsube (Horizontal Dash)
 	dw MoveInput_BD
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
+ENDC
 
 	; BDB+P -> Kamui Rimse (Cape Swing)
 	dw MoveInput_BDB
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
-
+	
+IF VER_EN
+	; BD+P -> Annu Mutsube (Horizontal Dash)
+	dw MoveInput_BD
+	db KEP_B_LIGHT
+	db KEP_B_HEAVY
+ELSE
 	; DF+P -> Lela Mutsube (Upwards Dash)
 	dw MoveInput_DF
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
+ENDC
 
 	; DB+K -> Mamahaha Flight
 	dw MoveInput_DB
@@ -4191,13 +4740,22 @@ CPU_MoveInputList_Nakoruru:
 	dw MoveInput_FDBFDB
 	db KEP_B_LIGHT
 	db KEP_B_HEAVY
-
 ENDC
+; 
+; =============== END OF SUBMODULE Play->CPU ===============
+;
 
-GFXDef_TakaraLogo:
-	db $42 ; Tile count
-GFX_TakaraLogo: INCBIN "data/gfx/takaralogo.bin"
+IF VER_EN
+GFXDef_TakaraLogo: mGfxDef "data/gfx/en/takaralogo.bin"
+BG_TakaraLogo: INCBIN "data/bg/en/takaralogo.bin"
+GFXDef_LagunaLogo: mGfxDef "data/gfx/en/lagunalogo.bin"
+BG_LagunaLogo: INCBIN "data/bg/en/lagunalogo.bin"
+ELSE
+
+GFXDef_TakaraLogo: mGfxDef "data/gfx/takaralogo.bin"
 BG_TakaraLogo: INCBIN "data/bg/takaralogo.bin"
+
+; In BANK $18 on the English version
 FontDef_Default: 
 	dw $9000 	; Destination ptr
 	db $30 		; Tiles to copy
@@ -4206,7 +4764,9 @@ FontDef_Default:
 	db COL_BLACK ; Bit1 color map (foreground)
 	; 1bpp font gfx
 .gfx:
-INCBIN "data/gfx/font.bin"
+	INCBIN "data/gfx/font.bin"
+
+ENDC
 
 ; 
 ; =============== START OF MODULE SGB ===============
@@ -4685,6 +5245,9 @@ SGB_ScrPalTbl:
 	dw SGBPacket_Stage_02_Pal01,        $0000,                      SGBPacket_Stage_Pat,      $0000 ; Rugal?
 	dw SGBPacket_Stage_03_Pal01,        $0000,                      SGBPacket_Stage_Pat,      $0000 ; Stadium Alternate? (Yellow Blue)
 	dw SGBPacket_Stage_04_Pal01,        $0000,                      SGBPacket_Stage_Pat,      $0000 ; Pipes Stage
+IF VER_EN
+	dw SGBPacket_LagunaLogo_Pal01,      $0000,                      SGBPacket_Pat_AllPal0,    $0000
+ENDC
 	
 SGBPacket_Intro_Pal01:	
 	pkg SGB_PACKET_PAL01, $01
@@ -4697,6 +5260,20 @@ SGBPacket_Intro_Pal01:
 	dw $0000 ; 1-3
 	db $00
 	
+IF VER_EN
+; New Red/Black Takara logo
+SGBPacket_TakaraLogo_Pal01:
+	pkg SGB_PACKET_PAL01, $01
+	dw $009C ; 0-0
+	dw $0014 ; 0-1
+	dw $000C ; 0-2WW
+	dw $0000 ; 0-3
+	dw $0000 ; 1-1
+	dw $0000 ; 1-2
+	dw $0000 ; 1-3
+	db $00
+ELSE
+; Black/White Takara logo
 SGBPacket_TakaraLogo_Pal01:
 	pkg SGB_PACKET_PAL01, $01
 	dw $7FFF ; 0-0
@@ -4707,7 +5284,44 @@ SGBPacket_TakaraLogo_Pal01:
 	dw $0000 ; 1-2
 	dw $0000 ; 1-3
 	db $00
+ENDC	
+
+IF VER_EN
+; Laguna Entertainment Logo
+SGBPacket_LagunaLogo_Pal01: 
+	pkg SGB_PACKET_PAL01, $01
+	dw $739C ; 0-0
+	dw $011C ; 0-1
+	dw $7380 ; 0-2
+	dw $0000 ; 0-3
+	dw $0000 ; 1-1
+	dw $0000 ; 1-2
+	dw $0000 ; 1-3
+	db $00
+ENDC
 	
+IF VER_EN
+SGBPacket_Title_Pal01:
+	pkg SGB_PACKET_PAL01, $01
+	dw $739C ; 0-0
+	dw $031C ; 0-1
+	dw $109C ; 0-2
+	dw $0000 ; 0-3
+	dw $7208 ; 1-1
+	dw $7100 ; 1-2
+	dw $0000 ; 1-3
+	db $00
+SGBPacket_Title_Pal23:
+	pkg SGB_PACKET_PAL23, $01
+	dw $739C ; 0-0
+	dw $4210 ; 2-1
+	dw $318C ; 2-2
+	dw $0000 ; 2-3
+	dw $029C ; 3-1
+	dw $111C ; 3-2
+	dw $0000 ; 3-3
+	db $00
+ELSE
 SGBPacket_Title_Pal01:
 	pkg SGB_PACKET_PAL01, $01
 	dw $7FFF ; 0-0
@@ -4728,6 +5342,7 @@ SGBPacket_Title_Pal23:
 	dw $3D6B ; 3-2
 	dw $0000 ; 3-3
 	db $00
+ENDC
 	
 SGBPacket_CharSelect_Pal01:
 	pkg SGB_PACKET_PAL01, $01
@@ -4902,6 +5517,7 @@ SGBPacket_CharSelect_Pat:
 	db $00
 	db $00
 	
+IF VER_EN
 SGBPacket_Title_Pat:
 	pkg SGB_PACKET_ATTR_BLK, $04
 	db $09 ; 9 Sets
@@ -4914,7 +5530,87 @@ SGBPacket_Title_Pat:
 	db $13 ; X2
 	db $11 ; Y2
 	;--
-	; Color blue for the japanese text above the title
+	; Color blue the text above the title
+	db %00000010 ; Change box border
+	ads 1,1,1 ; Pals
+	db $07 ; X1
+	db $02 ; Y1
+	db $0D ; X2
+	db $02 ; Y2
+	;--
+	; Color gray the 95 digit
+	db %00000010 ; Change box border
+	ads 2,2,2 ; Pals
+	db $10 ; X1
+	db $00 ; Y1
+	db $13 ; X2
+	db $00 ; Y2
+	;--
+	db %00000011 ; Change inside/box border
+	ads 2,2,2 ; Pals
+	db $0F ; X1
+	db $01 ; Y1
+	db $13 ; X2
+	db $0A ; Y2
+	;--
+	db %00000010 ; Change box border
+	ads 2,2,2 ; Pals
+	db $0E ; X1
+	db $05 ; Y1
+	db $0E ; X2
+	db $0A ; Y2
+	;--
+	db %00000011 ; Change box border
+	ads 2,2,2 ; Pals
+	db $04 ; X1
+	db $07 ; Y1
+	db $0D ; X2
+	db $0A ; Y2	
+	;--
+	db %00000010 ; Change box border
+	ads 2,2,2 ; Pals
+	db $02 ; X1
+	db $08 ; Y1
+	db $03 ; X2
+	db $0A ; Y2	
+	;--
+	db %00000010 ; Change box border
+	ads 2,2,2 ; Pals
+	db $0E ; X1
+	db $02 ; Y1
+	db $0E ; X2
+	db $02 ; Y2	
+	;--
+	; Color the "cloud"/fire layer red
+	db %00000011 ; Change box border
+	ads 3,3,3 ; Pals
+	db $00 ; X1
+	db $0B ; Y1
+	db $13 ; X2
+	db $0E ; Y2
+	;--
+	db $00
+	db $00
+	db $00
+	db $00
+	db $00
+	db $00
+	db $00
+	db $00
+ELSE
+SGBPacket_Title_Pat:
+	pkg SGB_PACKET_ATTR_BLK, $04
+	db $09 ; 9 Sets
+	;--
+	; Fill with red palette
+	db %00000011 ; Change inside/box border
+	ads 0,0,0 ; Pals
+	db $00 ; X1
+	db $00 ; Y1
+	db $13 ; X2
+	db $11 ; Y2
+	;--
+	; Color blue the text above the title
 	db %00000010 ; Change box border
 	ads 1,1,1 ; Pals
 	db $07 ; X1
@@ -4922,6 +5618,7 @@ SGBPacket_Title_Pat:
 	db $0D ; X2
 	db $05 ; Y2
 	;--
+	; Alternate palette to prevent a color clash between the blue text and the gray 95 digit
 	db %00000010 ; Change box border
 	ads 2,2,2 ; Pals
 	db $0D ; X1
@@ -4936,6 +5633,7 @@ SGBPacket_Title_Pat:
 	db $0E ; X2
 	db $05 ; Y2
 	;--
+	; Color gray the 95 digit
 	db %00000010 ; Change box border
 	ads 3,3,3 ; Pals
 	db $0D ; X1
@@ -4979,8 +5677,8 @@ SGBPacket_Title_Pat:
 	db $00
 	db $00
 	db $00
+ENDC
 	mIncJunk "L1F78F1"
-	
 SGBPacket_Stage_Pat:
 	pkg SGB_PACKET_ATTR_BLK, $02 ; Could have been $01
 	db $02 ; 2 Sets
@@ -5134,6 +5832,105 @@ SGB_WinCharPal_BrRd4:
 Module_TakaraLogo:
 	ld   sp, $DD00
 
+	; The English version extracted the code to their own subroutines.
+	; This organization was kept for 96, even with the Laguna Logo not present.
+IF VER_EN
+	call LagunaLogo_Do
+	call TakaraLogo_Do
+	
+	; Switch module
+	ld   b, BANK(Module_Intro)
+	ld   hl, Module_Intro
+	jp   FarJump
+	
+; =============== LagunaLogo_Do ===============
+; Main code for displaying the Laguna logo.
+LagunaLogo_Do:
+	di
+	; Set base bank (self)
+	ld   a, BANK(Module_TakaraLogo) 
+	ld   [MBC1RomBank], a
+	ldh  [hROMBank], a
+	;-----------------------------------
+	rst  $10				; Stop LCD
+	
+	; Use screen continuously
+	ld   hl, wMisc_C028
+	ld   [hl], $00
+	
+	; Reset DMG Pal
+	xor  a
+	ldh  [rBGP], a
+	ldh  [rOBP0], a
+	ldh  [rOBP1], a
+	
+	ld   de, SCRPAL_LAGUNALOGO
+	call HomeCall_SGB_ApplyScreenPalSet
+	
+	call ClearBGMap
+	call ClearWINDOWMap
+	
+	; Reset coords
+	xor  a
+	ldh  [hScrollX], a
+	ldh  [hScrollY], a
+	
+	; Copy logo GFX
+	ld   hl, GFXDef_LagunaLogo
+	ld   de, $9000
+	call CopyTilesAutoNum
+	
+	; Copy logo tilemap
+	ld   de, BG_LagunaLogo
+	ld   hl, $98C2
+	ld   b, $10
+	ld   c, $06
+	call CopyBGToRect
+
+	; Wipe sprites
+	call ClearOBJInfo
+	
+	; Disable window 
+	xor  a
+	ldh  [rWY], a
+	ldh  [rWX], a
+	ldh  [rSTAT], a
+	
+	ld   a, LCDC_PRIORITY|LCDC_OBJENABLE|LCDC_WTILEMAP|LCDC_ENABLE
+	rst  $18				; Resume LCD
+	;-----------------------------------
+	ei
+	; (VBlank will hit now) 
+	call Task_PassControl_NoDelay
+	
+	; Set DMG palettes
+	ld   a, $E4
+	ldh  [rOBP0], a
+	ld   a, $FF
+	ldh  [rOBP1], a
+	ld   a, $E4
+	ldh  [rBGP], a
+	
+	; Mute sound
+	ld   a, SND_MUTE
+	call HomeCall_Sound_ReqPlayExId_Stub
+	
+	; Show this screen for 180 frames
+	ld   bc, $00B4
+.mainLoop:	
+	call Task_PassControl_NoDelay	; Pass control
+	dec  bc						; FramesLeft--
+	ld   a, b
+	or   a, c					; FramesLeft == 0?
+	jp   nz, .mainLoop			; If not, loop
+.end:
+	ret							; Otherwise we're done	
+	
+; =============== TakaraLogo_Do ===============
+; Main code for displaying the Takara logo.
+TakaraLogo_Do:
+ENDC
+
 	di
 	; Set base bank (self)
 	ld   a, BANK(Module_TakaraLogo) 
@@ -5168,11 +5965,17 @@ Module_TakaraLogo:
 	ld   de, $9000
 	call CopyTilesAutoNum
 	
-	; Copy logo tilemap
+	; Copy logo tilemap. The newer logo is shorter.
 	ld   de, BG_TakaraLogo
-	ld   hl, $98C2
-	ld   b, $10
-	ld   c, $05
+IF VER_EN
+	ld   hl, $98E2	; VRAM Destination
+	ld   b, $10		; Width
+	ld   c, $03		; Height
+ELSE
+	ld   hl, $98C2	; VRAM Destination
+	ld   b, $10		; Width
+	ld   c, $05		; Height
+ENDC
 	call CopyBGToRect
 	
 	; Wipe sprites
@@ -5198,10 +6001,30 @@ Module_TakaraLogo:
 	ldh  [rOBP1], a
 	
 	; And for the logo itself
+IF !VER_EN
 	; Always white text on black background
 	ld   a, $93
 	ldh  [rBGP], a
+ELSE
+	;
+	; The palette depends on the hardware.
+	;
+	; On a DMG, it uses black text on a white background for some reason,
+	; while the proper palette is used for SGB mode (to have red text on black background).
+	;
 	
+	ld   a, [wMisc_C025]
+	bit  MISCB_IS_SGB, a	; Running on SGB?
+	jp   z, .setDMGPal		; If not, jump
+.setSGBPal:
+	ld   a, $93				; W on B
+	jp   .setPal
+.setDMGPal:
+	ld   a, $6C				; B on W
+.setPal:
+	ldh  [rBGP], a
+ENDC
+
 	; Mute sound
 	ld   a, $00
 	call HomeCall_Sound_ReqPlayExId_Stub
@@ -5371,14 +6194,16 @@ Module_TakaraLogo:
 	; ==============================
 	
 	; When pressing START from either controller, skip the delay
-.chkWait:	
+	; This got removed in the English version!
+.chkWait:
+IF !VER_EN
 	ldh  a, [hJoyNewKeys]
 	ld   d, a
 	ldh  a, [hJoyNewKeys2]
 	or   a, d
 	bit  KEYB_START, a			; Start pressed?
 	jp   nz, .end				; If so, jump
-
+ENDC
 	call Task_PassControl_NoDelay	; Pass control
 	dec  bc						; FramesLeft--
 	ld   a, b
@@ -5386,10 +6211,16 @@ Module_TakaraLogo:
 	jp   nz, .mainLoop			; If not, loop
 	
 .end:
+IF VER_EN
+	; It's a subroutine in the English version
+	ret
+ELSE
 	; Otherwise we're done
 	ld   b, BANK(Module_Intro) ; BANK $1D
 	ld   hl, Module_Intro
 	jp   FarJump
+ENDC
+
 ; 
 ; =============== END OF MODULE TakaraLogo ===============
 ;
@@ -5558,4 +6389,8 @@ ENDM
 	ret
 ; =============== END OF BANK ===============
 ; Junk area below.
+IF VER_EN
+	mIncJunk "L1F7FDA"
+ELSE
 	mIncJunk "L1F7C92"
+ENDC

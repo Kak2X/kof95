@@ -4,6 +4,13 @@
 ; THE KING OF FIGHTERS '95
 ;
 
+VER_JP  EQU 0 ; Japan
+VER_US  EQU 1 ; US
+VER_EU  EQU 2 ; Europe
+VER_96F EQU 96 ; Masterpiece
+
+VER_EN  EQU REV_VER == VER_EU || REV_VER == VER_US
+
 INCLUDE "src/font.asm"
 INCLUDE "src/hardware.asm"
 INCLUDE "src/constants.asm"

@@ -700,6 +700,159 @@ MoveC_Ralf_BaribariVulcanPunch:
 	call OBJLstS_DoAnimTiming_Loop_by_DE
 .ret:
 	ret
+	
+IF VER_EN
+
+PUSHC
+SETCHARMAP ascii 
+
+TextDef_WinEn_Marker:
+TextDef_WinEn_Kyo:
+	dw $9980
+	db .end-.start
+.start:
+	db "Burn in the fury of", C_NL
+	db " my flames."
+.end:
+TextDef_WinEn_Benimaru:
+	dw $9980
+	db .end-.start
+.start:
+	db "Lambs are tougher", C_NL
+	db " than you."
+.end:
+TextDef_WinEn_Ryo:
+	dw $9980
+	db .end-.start
+.start:
+	db "Fight,Fight,Fight.", C_NL
+	db C_NL
+	db "It`s the only way ", C_NL
+	db " to get tough!"
+.end:
+TextDef_WinEn_Yuri:
+	dw $9980
+	db .end-.start
+.start:
+	db "Why am I so strong?", C_NL
+	db C_NL
+	db "Just pure talent."
+.end:
+TextDef_WinEn_Terry:
+	dw $9980
+	db .end-.start
+.start:
+	db "You had guts, Kid.", C_NL
+	db C_NL
+	db "Let`s fight again!"
+.end:
+TextDef_WinEn_Joe:
+	dw $9980
+	db .end-.start
+.start:
+	db "Sorry. ", C_NL
+	db C_NL
+	db "I can recommend ", C_NL
+	db " a good doctor."
+.end:
+TextDef_WinEn_Heidern:
+	dw $9980
+	db .end-.start
+.start:
+	db "You can`t win", C_NL
+	db " against real style", C_NL
+	db "  like us."
+.end:
+TextDef_WinEn_Ralf:
+	dw $9980
+	db .end-.start
+.start:
+	db "Next time I`ll only", C_NL
+	db " use one hand!"
+.end:
+TextDef_WinEn_Athena:
+	dw $9980
+	db .end-.start
+.start:
+	db "There`s no tea time", C_NL
+	db " for me.", C_NL
+	db C_NL
+	db "Let`s go!"
+.end:
+TextDef_WinEn_Kensou:
+	dw $9980
+	db .end-.start
+.start:
+	db "If you want to beat", C_NL
+	db " me, you`ll need", C_NL
+	db " years of practice!"
+.end:
+TextDef_WinEn_Kim:
+	dw $9980
+	db .end-.start
+.start:
+	db "Justice always wins."
+.end:
+TextDef_WinEn_Mai:
+	dw $9980
+	db .end-.start
+.start:
+	db "Trapped in my", C_NL
+	db " spell of beauty?"
+.end:
+TextDef_WinEn_Iori:
+	dw $9980
+	db .end-.start
+.start:
+	db "You never even had", C_NL
+	db " a chance to begin", C_NL
+	db "  with!"
+.end:
+TextDef_WinEn_Eiji:
+	dw $9980
+	db .end-.start
+.start:
+	db "My Ninja style`s", C_NL
+	db " invincible!"
+.end:
+TextDef_WinEn_Billy:
+	dw $9980
+	db .end-.start
+.start:
+	db "I`ve no business", C_NL
+	db " with losers."
+.end:
+TextDef_WinEn_Saisyu:
+	dw $9980
+	db .end-.start
+.start:
+	db "That`s all you have?", C_NL
+	db C_NL
+	db "Now shove off!"
+.end:
+TextDef_WinEn_Rugal:
+	dw $9980
+	db .end-.start
+.start:
+	db "You never had", C_NL
+	db " a chance,", C_NL
+	db "  blowhard."
+.end:
+TextDef_WinEn_Nakoruru:
+	dw $9980
+	db .end-.start
+.start:
+	db "I`m fighting on", C_NL
+	db " behalf of", C_NL
+	db "  the natural world."
+.end:
+POPC
+ENDC
+
 ; =============== END OF BANK ===============
 ; Junk area below.
+IF VER_EN
+	mIncJunk "L197CFF"
+ELSE
 	mIncJunk "L197A25"
+ENDC

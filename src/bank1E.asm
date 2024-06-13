@@ -64,9 +64,19 @@ Module_Title:
 	xor  a
 	ldh  [hScrollX], a
 	ld   [wOBJScrollX], a
+IF VER_EN
+	; To make space for the extra two rows of copyright text at the bottom of the screen,
+	; everything is shifted up by 16px.
+	ld   a, $10
+	ld   [wOBJScrollY], a
+	ld   a, $A8
+	ldh  [hScrollY], a	
+ELSE
 	ld   [wOBJScrollY], a
 	ld   a, $98
 	ldh  [hScrollY], a
+ENDC
+
 	
 	; Load graphics
 	ld   b, BANK(Title_LoadVRAM) ; BANK $1D
@@ -138,18 +148,18 @@ Module_Title:
 	ld   hl, wOBJInfo_SnkText+iOBJInfo_Status
 	ld   de, OBJInfoInit_Title
 	call OBJLstS_InitFrom
-IF REV_LOGO_EN == 0
+IF VER_EN
+	; Left aligned in the English version
+	ld   hl, wOBJInfo_SnkText+iOBJInfo_X
+	ld   [hl], $00
+	ld   hl, wOBJInfo_SnkText+iOBJInfo_Y
+	ld   [hl], $48
+ELSE
 	; Centered in the Japanese version (like the Takara copyright in the tilemap)
 	ld   hl, wOBJInfo_SnkText+iOBJInfo_X
 	ld   [hl], $34
 	ld   hl, wOBJInfo_SnkText+iOBJInfo_Y
 	ld   [hl], $48
-ELSE
-	; Left aligned in the English version
-	ld   hl, wOBJInfo_SnkText+iOBJInfo_X
-	ld   [hl], $00
-	ld   hl, wOBJInfo_SnkText+iOBJInfo_Y
-	ld   [hl], $47
 ENDC
 	ld   hl, wOBJInfo_SnkText+iOBJInfo_OBJLstPtrTblOffset
 	ld   [hl], TITLE_OBJ_SNKCOPYRIGHT*OBJLSTPTR_ENTRYSIZE
@@ -158,15 +168,15 @@ ENDC
 	ld   hl, wOBJInfo_MenuText+iOBJInfo_Status
 	ld   de, OBJInfoInit_Title
 	call OBJLstS_InitFrom
+	; It starts hidden in the English version (as well as in 96), to facilitate the delay with disabled controls.
+IF VER_EN
+	ld   hl, wOBJInfo_MenuText+iOBJInfo_Status
+	res  OSTB_VISIBLE, [hl]
+ENDC
 	ld   hl, wOBJInfo_MenuText+iOBJInfo_X
 	ld   [hl], $28
 	ld   hl, wOBJInfo_MenuText+iOBJInfo_Y
-IF REV_LOGO_EN == 0
 	ld   [hl], $43
-ELSE
-	; Moved 1px down, to avoid having white text touch the white part of the new logo
-	ld   [hl], $44
-ENDC
 	; Entry $00
 	
 	; OBJ0 - Cursor pointing right
@@ -178,11 +188,7 @@ ENDC
 	ld   hl, wOBJInfo_CursorR+iOBJInfo_X
 	ld   [hl], $28
 	ld   hl, wOBJInfo_CursorR+iOBJInfo_Y
-IF REV_LOGO_EN == 0
 	ld   [hl], $43	; Needs to be aligned with menu text
-ELSE
-	ld   [hl], $44
-ENDC
 	ld   hl, wOBJInfo_CursorR+iOBJInfo_OBJLstPtrTblOffset
 	ld   [hl], TITLE_OBJ_CURSOR_R*OBJLSTPTR_ENTRYSIZE
 	
@@ -213,10 +219,10 @@ ENDC
 	ldh  a, [rSTAT]
 	or   a, STAT_LYC
 	ldh  [rSTAT], a
-IF REV_LOGO_EN == 0
-	ld   a, $66
-ELSE
+IF VER_EN
 	ld   a, $56
+ELSE
+	ld   a, $66
 ENDC
 	ldh  [rLYC], a
 	ldh  a, [rIE]
@@ -239,7 +245,20 @@ ENDC
 	ld   a, SND_MUTE
 	call HomeCall_Sound_ReqPlayExId_Stub
 	
+	; Disable serial since the game shouldn't process the other GB inputs on the menu
+	; (outside of when a VS mode is selected)
 	call Title_DisableSerial
+	
+	; The English version forces you to wait for a few seconds before enabling controls,
+	; presumably so you're forced to see those copyrights covering more of the screen.
+IF VER_EN
+	ld   b, $78		; B = Number of frames
+.delayLoop:
+	call Title_UpdateParallaxCoords		; Update effect
+	call Task_PassControl_NoDelay		; Wait frame
+	dec  b					; Are we done waiting?
+	jp   nz, .delayLoop		; If not, loop
+ENDC
 	
 .mainLoop:
 	call JoyKeys_DoCursorDelayTimer
@@ -288,11 +307,7 @@ Title_Mode_TitleScreen:
 	ld   hl, wOBJInfo_CursorR+iOBJInfo_Status
 	set  OSTB_VISIBLE, [hl]
 	ld   hl, wOBJInfo_CursorR+iOBJInfo_Y
-IF REV_LOGO_EN == 0
 	ld   [hl], $43
-ELSE
-	ld   [hl], $44
-ENDC
 
 	; Change OBJLst id to GAME START/OPTIONS text
 	ld   hl, wOBJInfo_MenuText+iOBJInfo_Status
@@ -556,7 +571,7 @@ Title_Mode_ModeSelect:
 .chkAct:
 	cp   MODESELECT_ACT_EXIT
 	jp   z, TitleSubMenu_Exit
-IF REV_VER == 96
+IF REV_VER == VER_96F
 	; Fake 96 switches the two strings around
 	cp   MODESELECT_ACT_TEAM1P
 	jp   z, .single1P
@@ -597,10 +612,6 @@ ENDC
 	;
 	; Verify that there's a second player
 	;
-IF REV_VER_2 == 1
-	call ModeSelect_CheckEndlessCpuVsCpuMode		; Full watch mode?
-	jp   c, .startSingleVS							; If so, skip the serial checks (no 2P inputs required)
-ENDC
 	ld   a, [wMisc_C025]
 	bit  MISCB_IS_SGB, a		; Playing on SGB?
 	jp   nz, .startSingleVS		; If so, skip the serial checks
@@ -612,11 +623,7 @@ ENDC
 	call ModeSelect_TrySendVSData
 	cp   MODESELECT_SBCMD_IDLE		; Did the other GB listen to the original request? 
 	jr   z, .startSingleVS			; If so, jump
-IF REV_VER_2 == 0
 	ld   a, SFX_ERROR
-ELSE
-	ld   a, SFX_ERROR
-ENDC
 	jp   HomeCall_Sound_ReqPlayExId
 .startSingleVS:
 	ld   a, MODE_SINGLEVS
@@ -624,10 +631,6 @@ ENDC
 	jp   ModeSelect_PrepVS
 	
 .teamVS:
-IF REV_VER_2 == 1
-	call ModeSelect_CheckEndlessCpuVsCpuMode		; Full watch mode?
-	jp   c, .startTeamVS							; If so, skip the serial checks (no 2P inputs required)
-ENDC
 	ld   a, [wMisc_C025]
 	bit  MISCB_IS_SGB, a		; Playing on SGB?
 	jp   nz, .startTeamVS		; If so, skip the serial checks
@@ -639,11 +642,7 @@ ENDC
 	cp   MODESELECT_SBCMD_IDLE		; Did the other GB listen to the original request? 
 	jr   z, .startTeamVS			; If so, jump
 	; Otherwise, play an error sound
-IF REV_VER_2 == 0
 	ld   a, SFX_ERROR
-ELSE
-	ld   a, SFX_ERROR
-ENDC
 	jp   HomeCall_Sound_ReqPlayExId
 .startTeamVS: 
 	ld   a, MODE_TEAMVS
@@ -676,20 +675,17 @@ ModeSelect_PrepSingle:
 	jp   ModeSelect_SwitchToCharSelect
 	
 ModeSelect_PrepVS:
-IF REV_VER_2 == 0
 	; P1: Player, P2: Player
 	; Removed in the English version since it gets done earlier.
 	ld   hl, wPlInfo_Pl1+iPlInfo_Flags0
 	res  PF0B_CPU, [hl]
 	ld   hl, wPlInfo_Pl2+iPlInfo_Flags0
 	res  PF0B_CPU, [hl]
-ENDC
 	; No stage sequence in 2P mode
 	ld   hl, wCharSeqId
 	ld   [hl], $00
 	jp   ModeSelect_SwitchToCharSelect
 
-IF REV_VER_2 == 0	
 ; [TCRF] Unreferenced code.
 ;        Sets up a CPU vs CPU battle in VS mode, which can't be triggered by one player.
 ModeSelect_Unused_PrepVSCPU:
@@ -702,7 +698,6 @@ ModeSelect_Unused_PrepVSCPU:
 	ld   hl, wCharSeqId
 	ld   [hl], $00
 	; Fall-through
-ENDC
 	
 ModeSelect_SwitchToCharSelect:
 	call ModeSelect_CheckCPUvsCPU
@@ -1597,17 +1592,16 @@ TitleSubMenu_Exit:
 	ld   hl, wOBJInfo_SnkText+iOBJInfo_Status
 	set  OSTB_VISIBLE, [hl]
 	
-	; Reset scrolling to make clouds appear already at the final Y pos
-	; without having to move them up again
-IF REV_LOGO_EN == 0
-	ld   a, $98 		; Matches with Y target in Title_UpdateParallaxCoords
+	; Reset cloud layer position, same values as the title init code
+IF VER_EN
+	ld   a, $10
+	ld   [wOBJScrollY], a
+	ld   a, $A8
+	ldh  [hScrollY], a	
+ELSE
+	ld   a, $98 		
 	ldh  [hScrollY], a
 	ld   a, $00
-	ld   [wOBJScrollY], a
-ELSE
-	ld   a, $A0
-	ldh  [hScrollY], a
-	ld   a, $10
 	ld   [wOBJScrollY], a
 ENDC
 	
@@ -1620,10 +1614,10 @@ ENDC
 	ldh  a, [rSTAT]
 	or   a, STAT_LYC
 	ldh  [rSTAT], a
-IF REV_LOGO_EN == 0
-	ld   a, $66			; Same as title init code
+IF VER_EN
+	ld   a, $56			; Same as title init code
 ELSE
-	ld   a, $56
+	ld   a, $66
 ENDC
 	ldh  [rLYC], a
 	ldh  a, [rIE]
@@ -1674,9 +1668,14 @@ TitleScreen_IsStartPressed:
 ; [POI] Handles the secret where holding B when selecting a mode activates a CPU vs CPU battle.
 ModeSelect_CheckCPUvsCPU:
 
-	; Curiously, there's no serial check unlike 96.
+	; Curiously, there's no serial check in the Japanese version.
 	; It doesn't matter anyway, since with serial, the opponent's inputs aren't sent in the Mode Select screen.
-	
+IF VER_EN
+	ld   a, [wMisc_C025]
+	bit  MISCB_SERIAL_MODE, a		; Setting up a VS battle?
+	ret  nz							; If so, return
+ENDC
+
 	; Check both controllers
 	ldh  a, [hJoyKeys]
 	bit  KEYB_B, a					; Holding B on controller 1?
@@ -1816,7 +1815,7 @@ Title_UpdateParallaxCoords:
 	
 	ld   hl, -$0040		; DE -= $00.40
 	add  hl, de
-IF REV_VER == 96
+IF REV_VER == VER_96F
 	; The cloud layer doesn't scroll here, DE stays the same
 	nop
 	nop
@@ -1934,7 +1933,7 @@ TextDef_Menu_Title:
 ; Fake 96 switches around the two strings, and alters the code to account for it. (see Title_Mode_ModeSelect)
 TextDef_Menu_SinglePlay:
 	dw $9924
-IF REV_VER == 96
+IF REV_VER == VER_96F
 	mTxtDef "TEAM PLAY"
 ELSE
 	mTxtDef "SINGLE PLAY"
@@ -1942,7 +1941,7 @@ ENDC
 
 TextDef_Menu_TeamPlay:
 	dw $9964
-IF REV_VER == 96
+IF REV_VER == VER_96F
 	mTxtDef "SINGLE PLAY"
 ELSE
 	mTxtDef "TEAM PLAY"
@@ -2065,7 +2064,7 @@ SGBPacket_Options_StopSnd:
 
 GFXDef_CharSel_BG0: mGfxDef "data/gfx/charsel_bg0.bin"
 
-IF REV_VER == 96
+IF REV_VER == VER_96F
 ; Altered cross and placeholder slots
 GFXDef_CharSel_BG1: mGfxDef "data/gfx/96f/charsel_bg1.bin"
 GFXDef_CharSel_Cross: mGfxDef "data/gfx/96f/charsel_cross.bin"
@@ -3876,7 +3875,7 @@ CharSel_PrintCharName:
 			; Blank out the old name
 			push bc
 				ld   hl, TextC_Char_None
-			IF REV_VER == 96
+			IF REV_VER == VER_96F
 				; [BUG] The fake 96 targets the next row by mistake
 				ld   de, BG_CHARSEL_P2NAME-$07+BG_TILECOUNT_H
 			ELSE
@@ -3958,7 +3957,7 @@ CharSel_PrintCharName:
 ; =============== CharSel_CursorPosTable ===============
 ; Maps character IDs to cursor sprite positions.
 CharSel_CursorPosTable:
-IF REV_VER == 96
+IF REV_VER == VER_96F
 YOFFSET = $28 ; Shifted down
 ELSE
 YOFFSET = 0
@@ -3986,7 +3985,7 @@ ENDC
 ; Ptr table to the starting tilemap positions on 2P side, indexed by character ID.
 ; The pointer for each character should always be equal to $99B3-(name length).
 CharSel_CharNameBGPtrTbl:
-IF REV_VER == 96
+IF REV_VER == VER_96F
 TOFFSET = -(BG_TILECOUNT_H*7) ; Shifted up 7 tiles
 ELSE
 TOFFSET = 0
@@ -4033,7 +4032,7 @@ CharSel_CharNamePtrTable:
 	dw TextC_Char_Nakoruru
 
 ; =============== TextC_Char_* ===============
-; Lite versions of TextDef which lack the tilemap offset, as they are passed to TextPrinter_Instant_CustomPos.
+; These lack the tilemap offset, as they are passed to TextPrinter_Instant_CustomPos.
 
 ; Empty line used to clear out the old character name.
 TextC_Char_None:     mTxtDef "        "
@@ -4044,7 +4043,12 @@ TextC_Char_Ryo:      mTxtDef "RYO"
 TextC_Char_Yuri:     mTxtDef "YURI"
 TextC_Char_Terry:    mTxtDef "TERRY"
 TextC_Char_Joe:      mTxtDef "JOE"
+; [BUG] Bizzarely, the English versions have a typo.
+IF VER_EN && !FIX_BUGS
+TextC_Char_Heidern:  mTxtDef "JEIDERN"
+ELSE
 TextC_Char_Heidern:  mTxtDef "HEIDERN"
+ENDC
 TextC_Char_Ralf:     mTxtDef "RALF"
 TextC_Char_Athena:   mTxtDef "ATHENA"
 TextC_Char_Kensou:   mTxtDef "KENSOU"
@@ -4252,7 +4256,7 @@ CharSel_DrawUnlockedChars:
 
 	; Nakoruru is only drawn when the "All Characters" dip switch is set
 	ld   a, b
-IF REV_VER == 96
+IF REV_VER == VER_96F
 	; Fake 96 draws all characters by causing the check to always fail, same for the bosses.
 	cp   $18
 ELSE
@@ -4271,14 +4275,14 @@ ENDC
 .chkBoss:;J
 	ld   a, b
 	
-IF REV_VER == 96
+IF REV_VER == VER_96F
 	cp   $18
 ELSE
 	cp   CHAR_ID_SAISYU/2		; Trying to draw Saisyu's portrait?
 ENDC
 	jp   z, .chkUnlockBoss		; If so, jump
 	
-IF REV_VER == 96
+IF REV_VER == VER_96F
 	cp   $18
 ELSE
 	cp   CHAR_ID_RUGAL/2		; Trying to Rugal's Saisyu's portrait?
@@ -4355,7 +4359,7 @@ ENDC
 ; Portraits are 3 tiles wide and 3 tiles high, and their origin is the top-left tile.
 ;
 CharSel_IdBGMapTbl:
-IF REV_VER == 96
+IF REV_VER == VER_96F
 TOFFSET = BG_TILECOUNT_H*5 ; 5 tiles down
 ELSE
 TOFFSET = 0
@@ -4491,7 +4495,7 @@ TextDef_CharSel_TeamTitle:
 ; =============== START OF MODULE OrdSel ===============
 ;
 
-IF REV_VER == 96
+IF REV_VER == VER_96F
 GFXDef_OrdSel_NumPic: mGfxDef "data/gfx/96f/ordsel_numpic.bin"
 ELSE
 GFXDef_OrdSel_NumPic: mGfxDef "data/gfx/ordsel_numpic.bin"
@@ -5699,9 +5703,15 @@ SubModule_CutsceneNakoruru:
 	; ==============================
 	
 	; Load the cutscene font
+IF VER_EN
+	ld   a, $00 ; Tile ID Offset
+	ld   de, $9000
+	call Cutscene_InitFont
+ELSE
 	ld   hl, GFXDef_Cutscene_Font_Nakoruru
 	ld   de, $9000
 	call CopyTilesAutoNum
+ENDC
 	
 	; Draw Nakoruru pic
 	ld   a, CHAR_ID_NAKORURU
@@ -5725,6 +5735,27 @@ SubModule_CutsceneNakoruru:
 	ld   a, BGM_NAKORURU
 	call HomeCall_Sound_ReqPlayExId_Stub
 	
+IF VER_EN
+	; Text 0
+	ld   hl, TextDef_CutsceneNakoruruEn0
+	ld   b, BANK(TextDef_CutsceneNakoruruEn0) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene1E_PostTextWrite
+	call Cutscene1E_ClearText
+	
+	; Text 1
+	ld   hl, TextDef_CutsceneNakoruruEn1
+	ld   b, BANK(TextDef_CutsceneNakoruruEn1) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene1E_PostTextWrite
+	jp   Cutscene1E_ClearText ; End
+ELSE
 	;--
 	; #0 - Text 0
 	ld   de, Text_CutsceneNakoruru0
@@ -5780,6 +5811,7 @@ SubModule_CutsceneNakoruru:
 	call Cutscene1E_PostTextWrite
 	jp   Cutscene1E_ClearText ; End
 	;--
+ENDC
 	
 ; =============== SubModule_CutsceneNakoruruDefeat ===============
 ; This submodule handles the cutscene when Nakoruru is defeated.
@@ -5812,9 +5844,15 @@ SubModule_CutsceneNakoruruDefeat:
 	; ==============================
 	
 	; Load the cutscene font
+IF VER_EN
+	ld   a, $00 ; Tile ID Offset
+	ld   de, $9000
+	call Cutscene_InitFont
+ELSE
 	ld   hl, GFXDef_Cutscene_Font_Nakoruru
 	ld   de, $9000
 	call CopyTilesAutoNum
+ENDC
 	
 	
 	; Draw Nakoruru pic
@@ -5839,6 +5877,27 @@ SubModule_CutsceneNakoruruDefeat:
 	ld   a, BGM_CUTSCENE0
 	call HomeCall_Sound_ReqPlayExId_Stub
 	
+IF VER_EN
+	; Text 0
+	ld   hl, TextDef_CutsceneNakoruruDefeatEn0
+	ld   b, BANK(TextDef_CutsceneNakoruruDefeatEn0) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene1E_PostTextWrite
+	call Cutscene1E_ClearText
+	
+	; Text 1
+	ld   hl, TextDef_CutsceneNakoruruDefeatEn1
+	ld   b, BANK(TextDef_CutsceneNakoruruDefeatEn1) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene1E_PostTextWrite
+	call Cutscene1E_ClearText
+ELSE
 	;--
 	; #0 - Text 0
 	ld   de, Text_CutsceneNakoruruDefeat0
@@ -5880,6 +5939,7 @@ SubModule_CutsceneNakoruruDefeat:
 	call Cutscene1E_PostTextWrite
 	call Cutscene1E_ClearText
 	;--
+ENDC
 	
 	;--
 	; #3 - Start 1st cutscene music
@@ -5887,6 +5947,47 @@ SubModule_CutsceneNakoruruDefeat:
 	call HomeCall_Sound_ReqPlayExId_Stub
 	;--
 	
+IF VER_EN
+	; Text 2
+	ld   hl, TextDef_CutsceneNakoruruDefeatEn2
+	ld   b, BANK(TextDef_CutsceneNakoruruDefeatEn2) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene1E_PostTextWrite
+	call Cutscene1E_ClearText
+	
+	; Text 3
+	ld   hl, TextDef_CutsceneNakoruruDefeatEn3
+	ld   b, BANK(TextDef_CutsceneNakoruruDefeatEn3) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene1E_PostTextWrite
+	call Cutscene1E_ClearText
+	
+	; Text 4
+	ld   hl, TextDef_CutsceneNakoruruDefeatEn4
+	ld   b, BANK(TextDef_CutsceneNakoruruDefeatEn4) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene1E_PostTextWrite
+	call Cutscene1E_ClearText
+	
+	; Text 5
+	ld   hl, TextDef_CutsceneNakoruruDefeatEn5
+	ld   b, BANK(TextDef_CutsceneNakoruruDefeatEn5) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene1E_PostTextWrite
+	call Cutscene1E_ClearText
+ELSE
 	;--
 	; #4 - Text 3	
 	ld   de, Text_CutsceneNakoruruDefeat3
@@ -5998,6 +6099,7 @@ SubModule_CutsceneNakoruruDefeat:
 	call Cutscene1E_PostTextWrite
 	call Cutscene1E_ClearText
 	;--
+ENDC
 	
 	;--
 	; #C - Draw Omega Rugal pic
@@ -6013,6 +6115,17 @@ SubModule_CutsceneNakoruruDefeat:
 	call HomeCall_Sound_ReqPlayExId_Stub
 	;--
 	
+IF VER_EN
+	; Text 6
+	ld   hl, TextDef_CutsceneNakoruruDefeatEn6
+	ld   b, BANK(TextDef_CutsceneNakoruruDefeatEn6) ; BANK $15
+	ld   c, $04
+	call TextPrinter_MultiFrameFar_AllowFast
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene1E_PostTextWrite
+	jp   Cutscene1E_ClearText ; End
+ELSE
 	;--
 	; #D - Text B	
 	ld   de, Text_CutsceneNakoruruDefeatB
@@ -6026,14 +6139,23 @@ SubModule_CutsceneNakoruruDefeat:
 	call Cutscene1E_PostTextWrite
 	jp   Cutscene1E_ClearText ; End
 	;--
+ENDC
 	
 ; =============== Cutscene1E_ClearText ===============
 ; Blank out any existing text.
 Cutscene1E_ClearText:
-	; Clear all 4 rows
-	ld   hl, BGMap_Begin+$01C0 ; BG Ptr
+	; Clear all 4 rows (7 in the English version)
+IF VER_EN
+	ld   hl, BGMap_Begin+$0180 ; BG Ptr (En)
+ELSE
+	ld   hl, BGMap_Begin+$01C0 ; BG Ptr (Jp)
+ENDC
 	ld   b, $18	; Rect Width
-	ld   c, $04 ; Rect Height
+IF VER_EN
+	ld   c, $07 ; Rect Height (En)
+ELSE
+	ld   c, $04 ; Rect Height (Jp)
+ENDC
 	ld   d, $00 ; Tile ID
 	jp   FillBGRect
 	
@@ -6047,7 +6169,13 @@ Cutscene1E_ClearText:
 Cutscene1E_PostTextWrite:
 	; Check early abort
 	call Cutscene1E_IsStartPressed	; Did anyone press START?
+IF VER_EN
+	jr   nc, .contWait				; If not, jump
+	call Task_PassControl_NoDelay	; Otherwise wait a frame, then return
+	ret
+ELSE
 	ret  c							; If so, return
+ENDC
 .contWait:
 	call Task_PassControl_NoDelay	; Wait frame
 	dec  b							; Are we done?
@@ -6734,7 +6862,11 @@ MoveC_Eiji_ZantetsuTourouken:
 ; --------------- frame #12 - line damage + block check ---------------		
 .setDamage1_chkOtherBlock:
 	mMvC_ValFrameStart .anim
+	IF VER_EN
+		mMvC_SetDamageNext $10, HITTYPE_LAUNCH_HIGH_UB, PF3_HEAVYHIT
+	ELSE
 		mMvC_SetDamageNext $10, HITTYPE_LAUNCH_HIGH_UB, PF3_HEAVYHIT|PF3_CONTHIT
+	ENDC
 		jp   .anim
 ; --------------- common escape check ---------------
 ; Done at the start of about half of the frames.
@@ -7113,4 +7245,8 @@ ModeSelect_GetCtrlFromSerial:
 	
 ; =============== END OF BANK ===============
 ; Junk area below, contains a repeated duplicate of the above subroutines.
+IF VER_EN
+	mIncJunk "L1E7ED6"
+ELSE
 	mIncJunk "L1E7F7C"
+ENDC

@@ -9,6 +9,11 @@ kof96f.map
 kof96f.o
 kof96f.sym
 kof96f.sn*
+kof95e.gb
+kof95e.map
+kof95e.o
+kof95e.sym
+kof95e.sn*
 
 # provide your own comparision rom
 original_jp.gb
@@ -17,6 +22,9 @@ original_jp.sym
 original_96f.gb
 original_96f.link
 original_96f.sym
+original_eu.gb
+original_eu.link
+original_eu.sym
 
 # not necessary
 tempconv.txt

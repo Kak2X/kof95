@@ -33,7 +33,7 @@ $KEP = [
 	7 => 'KEP_B_HEAVY',
 ];
 
-	
+	/*
 const TEMPLATE = '	; CHAR_ID_{i}
 	dw L1C{1}{0} ; Source text data ptr
 	dw ${3}{2} ; Destination tilemap ptr
@@ -42,15 +42,15 @@ const TEMPLATE = '	; CHAR_ID_{i}
 	dw ${6}{7} ; Padding
 	
 ';
+*/
 
-/*
 const TEMPLATE = '	; XXXXX -> XXXXXXXXXXXXX
 	dw L00{1}{0}
 	db {2:KEP}
 	db {3:KEP}
 
 ';
-
+/*
 // Stage Def
 const TEMPLATE = '	; STAGE {i}
 	db BANK(L{0}{2}{1}) ; BANK ${0}

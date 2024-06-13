@@ -51,9 +51,11 @@ SubModule_CutsceneEpilogue:
 	ldh  [rOBP1], a
 	
 	; [BUG] This doesn't reload SGB palettes, causing a gray square to show up.
-	;ld   de, SCRPAL_INTRO
-	;call HomeCall_SGB_ApplyScreenPalSet
-	
+IF VER_EN || FIX_BUGS
+	ld   de, SCRPAL_INTRO
+	call HomeCall_SGB_ApplyScreenPalSet
+ENDC
+
 	; Clear tilemaps
 	call ClearBGMap
 	call ClearWINDOWMap
@@ -67,9 +69,15 @@ SubModule_CutsceneEpilogue:
 	; ==============================
 	
 	; Load the cutscene font
+IF VER_EN
+	ld   a, $00 ; Tile ID Offset
+	ld   de, $9000
+	call Cutscene_InitFont
+ELSE
 	ld   hl, GFXDef_Cutscene_Font_Epilogue
 	ld   de, $9000
 	call CopyTilesAutoNum
+ENDC
 	
 	; Delete all sprite mappings
 	call ClearOBJInfo
@@ -92,6 +100,16 @@ SubModule_CutsceneEpilogue:
 	ld   a, BGM_ENDING
 	call HomeCall_Sound_ReqPlayExId_Stub
 	
+IF VER_EN
+	; Text 0
+	ld   hl, TextDef_CutsceneEpilogueEn
+	ld   b, BANK(TextDef_CutsceneEpilogueEn) ; BANK $15
+	ld   c, $0A ; Slow speed, presumably because the 5 screens of text turned into one.
+	call TextPrinter_MultiFrameFar_NoCtrl
+	call Task_PassControl_NoDelay
+	ld   b, $B4
+	call Cutscene0A_PostTextWrite
+ELSE
 	; Text 0
 	ld   de, Text_CutsceneEpilogue0
 	ld   hl, $98E1
@@ -150,6 +168,7 @@ SubModule_CutsceneEpilogue:
 	call Task_PassControl_NoDelay
 	ld   b, $B4
 	call Cutscene0A_PostTextWrite
+ENDC
 	
 	; Delay 5 frames
 	ld   b, $05
@@ -180,8 +199,10 @@ SubModule_Credits:
 	ldh  [rOBP1], a
 	
 	; [BUG] This doesn't reload SGB palettes, causing a gray square to show up.
-	;ld   de, SCRPAL_INTRO
-	;call HomeCall_SGB_ApplyScreenPalSet
+IF VER_EN || FIX_BUGS
+	ld   de, SCRPAL_INTRO
+	call HomeCall_SGB_ApplyScreenPalSet
+ENDC
 	
 	; Clear tilemaps
 	call ClearBGMap
@@ -225,21 +246,36 @@ SubModule_Credits:
 	; When all text for a screen is printed, wait for a bit before continuing.
 	;
 	
+; IN
+; - 1: Delay multiplier (JPN)
+; - 2: Delay multiplier (ENG)
+MACRO mDelayCredits
+	IF VER_EN
+		; English version
+		; Base delay: 5.25 seconds
+		ld   b, \2
+		call Cutscene_ClearBG_Delay1D8
+	ELSE
+		; Japanese version
+		; Base delay: almost 1 second
+		REPT \1
+			call Task_PassControl_Delay3B
+		ENDR
+		call ClearBGMap
+	ENDC
+ENDM
+
 	; 0
 	ld   hl, TextDef_Credits0_0
 	call TextPrinter_Instant
-	call Task_PassControl_Delay3B
-	call ClearBGMap
+	mDelayCredits $01, $04
 	
 	; 1
 	ld   hl, TextDef_Credits1_0
 	call TextPrinter_Instant
 	ld   hl, TextDef_Credits1_1
 	call TextPrinter_Instant
-REPT 4
-	call Task_PassControl_Delay3B
-ENDR
-	call ClearBGMap
+	mDelayCredits $04, $08
 	
 	; 2
 	ld   hl, TextDef_Credits2_0
@@ -248,22 +284,16 @@ ENDR
 	call TextPrinter_Instant
 	ld   hl, TextDef_Credits2_2
 	call TextPrinter_Instant
-REPT 4
-	call Task_PassControl_Delay3B
-ENDR
+	mDelayCredits $04, $08
 	
 	; 3
-	call ClearBGMap
 	ld   hl, TextDef_Credits3_0
 	call TextPrinter_Instant
 	ld   hl, TextDef_Credits3_1
 	call TextPrinter_Instant
 	ld   hl, TextDef_Credits3_2
 	call TextPrinter_Instant
-REPT 4
-	call Task_PassControl_Delay3B
-ENDR
-	call ClearBGMap
+	mDelayCredits $04, $08
 	
 	; 4
 	ld   hl, TextDef_Credits4_0
@@ -272,20 +302,14 @@ ENDR
 	call TextPrinter_Instant
 	ld   hl, TextDef_Credits4_2
 	call TextPrinter_Instant
-REPT 4
-	call Task_PassControl_Delay3B
-ENDR
-	call ClearBGMap
+	mDelayCredits $04, $08
 	
 	; 5
 	ld   hl, TextDef_Credits5_0
 	call TextPrinter_Instant
 	ld   hl, TextDef_Credits5_1
 	call TextPrinter_Instant
-REPT 4
-	call Task_PassControl_Delay3B
-ENDR
-	call ClearBGMap
+	mDelayCredits $04, $08
 	
 	; 6
 	ld   hl, TextDef_Credits6_0
@@ -296,20 +320,14 @@ ENDR
 	call TextPrinter_Instant
 	ld   hl, TextDef_Credits6_3
 	call TextPrinter_Instant
-REPT 4
-	call Task_PassControl_Delay3B
-ENDR
-	call ClearBGMap
+	mDelayCredits $04, $08
 	
 	; 7
 	ld   hl, TextDef_Credits7_0
 	call TextPrinter_Instant
 	ld   hl, TextDef_Credits7_1
 	call TextPrinter_Instant
-REPT 4
-	call Task_PassControl_Delay3B
-ENDR
-	call ClearBGMap
+	mDelayCredits $04, $08
 	
 	; 8
 	ld   hl, TextDef_Credits8_0
@@ -320,10 +338,7 @@ ENDR
 	call TextPrinter_Instant
 	ld   hl, TextDef_Credits8_3
 	call TextPrinter_Instant
-REPT 4
-	call Task_PassControl_Delay3B
-ENDR
-	call ClearBGMap
+	mDelayCredits $04, $08
 	
 	; 9
 	ld   hl, TextDef_Credits9_0
@@ -332,10 +347,27 @@ ENDR
 	call TextPrinter_Instant
 	ld   hl, TextDef_Credits9_2
 	call TextPrinter_Instant
-REPT 4
-	call Task_PassControl_Delay3B
-ENDR
-	call ClearBGMap
+	mDelayCredits $04, $08
+	
+IF VER_EN
+	; English Staff credits
+	
+	; EN A (Localization Coordinators)
+	ld   hl, TextDef_CreditsEnA_0
+	call TextPrinter_Instant
+	ld   hl, TextDef_CreditsEnA_1
+	call TextPrinter_Instant
+	ld   hl, TextDef_CreditsEnA_2
+	call TextPrinter_Instant
+	mDelayCredits $04, $08
+	
+	; EN B (Laguna Staff)
+	ld   hl, TextDef_CreditsEnB_0
+	call TextPrinter_Instant
+	ld   hl, TextDef_CreditsEnB_1
+	call TextPrinter_Instant
+	mDelayCredits $04, $08
+ENDC
 	
 	; A
 	ld   hl, TextDef_CreditsA_0
@@ -352,10 +384,7 @@ ENDR
 	call TextPrinter_Instant
 	ld   hl, TextDef_CreditsA_6
 	call TextPrinter_Instant
-REPT 4
-	call Task_PassControl_Delay3B
-ENDR
-	call ClearBGMap
+	mDelayCredits $04, $0C
 	
 	; B
 	ld   hl, TextDef_CreditsB_0
@@ -384,20 +413,14 @@ ENDR
 	call TextPrinter_Instant
 	ld   hl, TextDef_CreditsB_C
 	call TextPrinter_Instant
-REPT 4
-	call Task_PassControl_Delay3B
-ENDR
-	call ClearBGMap
+	mDelayCredits $04, $10
 	
 	; C
 	ld   hl, TextDef_CreditsC_0
 	call TextPrinter_Instant
 	ld   hl, TextDef_CreditsC_1
 	call TextPrinter_Instant
-REPT 4
-	call Task_PassControl_Delay3B
-ENDR
-	call ClearBGMap
+	mDelayCredits $04, $08
 	
 	; D
 	ld   hl, TextDef_CreditsD_0
@@ -406,15 +429,14 @@ ENDR
 	call TextPrinter_Instant
 	ld   hl, TextDef_CreditsD_2
 	call TextPrinter_Instant
-REPT 4
-	call Task_PassControl_Delay3B
-ENDR
-	call ClearBGMap
+	mDelayCredits $04, $08
 	
 	; E
 	ld   hl, TextDef_CreditsE_0
 	call TextPrinter_Instant
-	
+IF VER_EN
+	mDelayCredits XX, $10
+ELSE
 	; Wait 590 frames before returning
 	ld   b, $0A
 .loop:
@@ -422,7 +444,8 @@ ENDR
 	dec  b
 	jp   nz, .loop
 	call ClearBGMap
-	
+ENDC
+
 	ret
 	
 ; =============== SubModule_TheEnd ===============
@@ -513,7 +536,13 @@ Cutscene0A_ClearText:
 Cutscene0A_PostTextWrite:
 	; Check early abort
 	call Cutscene0A_IsStartPressed	; Did anyone press START?
+IF VER_EN
+	jr   nc, .contWait				; If not, jump
+	call Task_PassControl_NoDelay	; Otherwise wait a frame, then return
+	ret
+ELSE
 	ret  c							; If so, return
+ENDC
 .contWait:
 	call Task_PassControl_NoDelay	; Wait frame
 	dec  b							; Are we done?
@@ -521,7 +550,21 @@ Cutscene0A_PostTextWrite:
 .end:
 	xor  a	; C flag clear
 	ret
-
+IF VER_EN
+; =============== Cutscene_ClearBG_Delay1D8 ===============
+; Waits for $1D8 frames and then clears the BG tilemap, which clears the middle section.
+; Identical to the version used in 96.
+Cutscene_ClearBG_Delay1D8:
+	ld   b, $08	; For 8 times...
+.loop:
+	; Wait $3B frames
+	call Task_PassControl_Delay3B
+	dec  b
+	jp   nz, .loop
+	; Clear middle section (Goenitz, characters)
+	call ClearBGMap
+	ret
+ENDC
 ; =============== Cutscene0A_IsStartPressed ===============
 ; Checks if any player pressed START.
 ; Similar to Win_IsStartPressed, but with an useless player branch.
@@ -549,12 +592,20 @@ TextDef_Credits0_0:
 	mTxtDef "-STAFF-"
 TextDef_Credits1_0:
 	dw $98C0
+IF VER_EN
+	mTxtDef "-EXECUTIVE PRODUCER-"
+ELSE
 	mTxtDef "-EXECTIVE PRODUCER-"
+ENDC
 TextDef_Credits1_1:
 	dw $9943
 	mTxtDef "NOBUYUKI OKUDE"
 TextDef_Credits2_0:
+IF VER_EN
+	dw $98A5
+ELSE
 	dw $98A4
+ENDC
 	mTxtDef "-PRODUCER-"
 TextDef_Credits2_1:
 	dw $9902
@@ -563,7 +614,11 @@ TextDef_Credits2_2:
 	dw $9965
 	mTxtDef "T.ISHIGAI"
 TextDef_Credits3_0:
+IF VER_EN
+	dw $98C5
+ELSE
 	dw $98C4
+ENDC
 	mTxtDef "-DIRECTOR-"
 TextDef_Credits3_1:
 	dw $9921
@@ -573,7 +628,11 @@ TextDef_Credits3_2:
 	mTxtDef "AKIHIKO KIMURA"
 TextDef_Credits4_0:
 	dw $98C3
+IF VER_EN
+	mTxtDef "-ARRANGEMENT-"
+ELSE
 	mTxtDef "-ARRENGEMENT-"
+ENDC
 TextDef_Credits4_1:
 	dw $9926
 	mTxtDef "T.M.95"
@@ -606,7 +665,11 @@ TextDef_Credits7_1:
 	mTxtDef "K.MIKUSA  ASPECT"
 TextDef_Credits8_0:
 	dw $98A1
+IF VER_EN
+	mTxtDef "-SUPER MARKETTER-"
+ELSE
 	mTxtDef "-SUPER MARKETEER-"
+ENDC
 TextDef_Credits8_1:
 	dw $9901
 	mTxtDef "TOSHIHIRO MORIOKA"
@@ -691,21 +754,56 @@ TextDef_CreditsC_0:
 TextDef_CreditsC_1:
 	dw $9923
 	mTxtDef "SNK ALL STAFF"
+	
+; One tile right in the English version
 TextDef_CreditsD_0:
+IF VER_EN
+	dw $98E6
+ELSE
 	dw $98E5
+ENDC
 	mTxtDef "PRESENTED"
 TextDef_CreditsD_1:
+IF VER_EN
+	dw $9949
+ELSE
 	dw $9948
+ENDC
 	mTxtDef "BY"
 TextDef_CreditsD_2:
+IF VER_EN
+	dw $9987
+ELSE
 	dw $9986
+ENDC
 	mTxtDef "TAKARA"
 TextDef_CreditsE_0:
 	dw $9903
+IF VER_EN
+	mTxtDef "YOU ARE NO.1 !"
+ELSE
 	mTxtDef "YOU ARE NO.1!"
+ENDC
 TextDef_TheEnd:
 	dw $9906
 	mTxtDef "THE  END"
+IF VER_EN
+TextDef_CreditsEnA_0:
+	dw $98C3
+	mTxtDef "-COORDINATOR-"
+TextDef_CreditsEnA_1:
+	dw $9923
+	mTxtDef "SHINICHI SUZUKI"
+TextDef_CreditsEnA_2:
+	dw $9981
+	mTxtDef "HIROYUKI YAMAGUCHI"
+TextDef_CreditsEnB_0:
+	dw $98C3
+	mTxtDef "-LAGUNA STAFF-"
+TextDef_CreditsEnB_1:
+	dw $9924
+	mTxtDef "FRANK GLASER"
+ENDC
 
 ; 
 ; =============== END OF MODULE Win/Cutscene ===============
@@ -713,4 +811,8 @@ TextDef_TheEnd:
 
 ; =============== END OF BANK ===============
 ; Junk area below.
+IF VER_EN
+	mIncJunk "L0A7D40"
+ELSE
 	mIncJunk "L0A7D99"
+ENDC

@@ -2929,13 +2929,17 @@ MoveC_Saisyu_EnJou:
 .obj1:
 	mMvC_ValFrameStartFast .obj1_cont
 		mMvC_PlaySound SFX_HEAVY
+
 		;--
 		; Remove invuln
+		; The English version does this later, during recovery.
 		ld   hl, iPlInfo_Flags0
 		add  hl, bc
 		set  PF0B_AIR, [hl]
+	IF !VER_EN
 		inc  hl
-		res  PF1B_INVULN, [hl]
+		res  PF1B_INVULN, [hl]	
+	ENDC
 		;--
 		; Set jump settings
 		mMvC_ChkMove MOVE_SAISYU_EN_JOU_H, .obj1_setJumpH
@@ -2976,7 +2980,14 @@ MoveC_Saisyu_EnJou:
 		mMvC_SetAnimSpeed $08
 		mMvC_SetDamageNext $08, HITTYPE_LAUNCH_HIGH_UB, PF3_HEAVYHIT|PF3_FIRE
 		mMvC_PlaySound SFX_HEAVY
+	IF VER_EN
+		; See the version check above
+		ld   hl, iPlInfo_Flags1
+		add  hl, bc
+		res  PF1B_INVULN, [hl]	
+	ENDC
 		jp   .anim
+
 ; --------------- frame #3 ---------------
 .chkEnd:
 	mMvC_ValFrameEnd .anim
@@ -3306,6 +3317,12 @@ MoveInit_Benimaru_SuperInazumaKick:
 	call Play_Pl_ClearJoyDirBuffer
 	mMvIn_GetLHK MOVE_BENIMARU_SUPER_INAZUMA_KICK_L, MOVE_BENIMARU_SUPER_INAZUMA_KICK_H
 	call MoveInputS_SetSpecMove_StopSpeed
+IF VER_EN
+	; Invulnerable in the English version
+	ld   hl, iPlInfo_Flags1
+	add  hl, bc
+	set  PF1B_INVULN, [hl]
+ENDC
 	jp   MoveInputReader_Benimaru_MoveSet
 	
 ; =============== MoveInit_Benimaru_Raikouken ===============
@@ -7673,4 +7690,8 @@ MoveC_Kim_HouOuKyaku:
 	ret
 ; =============== END OF BANK ===============
 ; Junk area below
+IF REV_VER == VER_EU
+	mIncJunk "L027E1A"
+ELSE
 	mIncJunk "L027E11"
+ENDC

@@ -217,13 +217,20 @@ SGB_SendBorderData_WaitAfterSend:
 	jr   nz, SGB_SendBorderData_WaitAfterSend	; If not, loop
 	ret
 	
+IF VER_EN
+GFX_SGB_Border0: INCBIN "data/gfx/en/sgb_border0.bin"
+GFX_SGB_Border1: INCBIN "data/gfx/en/sgb_border1.bin"
+BG_SGB_Border: INCBIN "data/bg/en/sgb_border.bin"
+ELSE
 GFX_SGB_Border0: INCBIN "data/gfx/sgb_border0.bin"
 GFX_SGB_Border1: INCBIN "data/gfx/sgb_border1.bin"
 BG_SGB_Border: INCBIN "data/bg/sgb_border.bin"
+ENDC
+
 
 ; [TCRF] There's a bit more to the backgrounds than what's used, but the unused
 ;        portions are just padding areas.
-IF REV_VER == 96
+IF REV_VER == VER_96F
 GFXDef_Play_Stage_00: mGfxDef "data/gfx/96f/play_stage_00.bin"
 BG_Play_Stage_00: INCBIN "data/bg/96f/play_stage_00.bin"
 BG_Play_Stage_00_Unused: INCBIN "data/bg/96f/play_stage_00_unused.bin"
@@ -254,4 +261,8 @@ ENDC
 
 ; =============== END OF BANK ===============
 ; Junk area below.
+IF VER_EN
+	mIncJunk "L047DB7"
+ELSE
 	mIncJunk "L047F97"
+ENDC

@@ -30,6 +30,15 @@ KEP_B_LIGHT EQU 1 << KEPB_B_LIGHT
 KEP_A_HEAVY EQU 1 << KEPB_A_HEAVY
 KEP_B_HEAVY EQU 1 << KEPB_B_HEAVY
 
+IF VER_EN
+CMLB_BTN EQU 0 ; For iCPUMoveListItem_LastLHKeyA. 
+               ; If set, the MoveInput iCPUMoveListItem_MoveInputPtr points to contains button (LH) keys.
+               ; If clear, it contains directional keys.
+CML_BTN EQU 1 << CMLB_BTN
+ELSE
+CML_BTN EQU 0 ; Disabled
+ENDC
+
 ; CPU idle actions
 CMA_MOVEF  EQU $00 ; Move or run forwads
 CMA_MOVEB  EQU $01 ; Move or hop backwards
@@ -129,7 +138,6 @@ MISCB_TITLE_SECT      EQU 2 ; Allows parallax for the title screen
 
 MISC_USE_SECT         EQU 1 << MISCB_USE_SECT
 ;--
-
 TXCB_INSTANT EQU 7 ; If set, instant text printing was enabled
 
 OBJINFO_SIZE     EQU $40 ; wOBJInfo size
@@ -452,6 +460,9 @@ SCRPAL_STAGE_01       EQU $06
 SCRPAL_STAGE_04       EQU $07
 SCRPAL_STAGE_02       EQU $08
 SCRPAL_STAGE_03       EQU $09
+IF VER_EN
+SCRPAL_LAGUNALOGO     EQU $0A
+ENDC
 
 ;
 ; MODE IDs & CONSTANTS
@@ -565,7 +576,7 @@ CHARSEL_OBJ_CURSORCPU1P     EQU $08
 CHARSEL_OBJ_CURSORCPU2P     EQU $0C
 
 ; Fake 96 adjusts the positions of these to move them above the grid.
-IF REV_VER == 96
+IF REV_VER == VER_96F
 BG_CHARSEL_P1ICON0 EQU $9861
 BG_CHARSEL_P1ICON1 EQU $9863
 BG_CHARSEL_P1ICON2 EQU $9865
@@ -1164,3 +1175,17 @@ WIN_VSDRAW     EQU $05
 PIC_POS_L EQU 0 ; Left
 PIC_POS_M EQU 1 ; Center
 PIC_POS_R EQU 2 ; Right
+
+IF VER_EN
+
+C_NL EQU $FF ; Newline character in strings
+
+; TextPrinter_MultiFrame options
+TXT_ALLOWFAST           EQU $00 ; Allows pressing A to speedup text printing, or START to enable instant text printing (TXCB_INSTANT)
+TXT_ALLOWSKIP           EQU $01 ; Allows pressing START to end prematurely the text printing.
+TXT_NOCTRL              EQU $02 ; Doesn't allow to control the text printing.
+TXT_ALLOWFAST_BLINKPIC  EQU $03 ; Like TXT_ALLOWFAST, and also blinks Omega Rugal's pic
+
+TXB_NONE EQU $FF ; No custom code when waiting idle
+
+ENDC

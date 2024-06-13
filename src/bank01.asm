@@ -4298,7 +4298,12 @@ BGXDef_Play_HUD_CharName_Ryo:      mTxtDef "RYO"
 BGXDef_Play_HUD_CharName_Yuri:     mTxtDef "YURI"
 BGXDef_Play_HUD_CharName_Terry:    mTxtDef "TERRY"
 BGXDef_Play_HUD_CharName_Joe:      mTxtDef "JOE"
+; [BUG] Bizzarely, the English versions have a typo.
+IF VER_EN && !FIX_BUGS
+BGXDef_Play_HUD_CharName_Heidern:  mTxtDef "JEIDERN"
+ELSE
 BGXDef_Play_HUD_CharName_Heidern:  mTxtDef "HEIDERN"
+ENDC
 BGXDef_Play_HUD_CharName_Ralf:     mTxtDef "RALF"
 BGXDef_Play_HUD_CharName_Athena:   mTxtDef "ATHENA"
 BGXDef_Play_HUD_CharName_Kensou:   mTxtDef "KENSOU"
@@ -4319,14 +4324,14 @@ GFX_Char_Icons: INCBIN "data/gfx/char_icons.bin"
 ; Other HUD elements
 GFXAuto_Play_HUD_Bar: 
 	dw $8D40
-IF REV_VER == 96
+IF REV_VER == VER_96F
 	mGfxDef "data/gfx/96f/play_hud_bar.bin"
 ELSE
 	mGfxDef "data/gfx/play_hud_bar.bin"
 ENDC
 GFXAuto_Play_HUD:
 	dw $8C80
-IF REV_VER == 96
+IF REV_VER == VER_96F
 	mGfxDef "data/gfx/96f/play_hud.bin"
 ELSE
 	mGfxDef "data/gfx/play_hud.bin"
@@ -4341,7 +4346,7 @@ BG_Play_HUD_1PMarker: INCBIN "data/bg/play_hud_1pmarker.bin"
 BG_Play_HUD_2PMarker: INCBIN "data/bg/play_hud_2pmarker.bin"
 BG_Play_HUD_HealthBarL: INCBIN "data/bg/play_hud_healthbarl.bin"
 BG_Play_HUD_HealthBarR: INCBIN "data/bg/play_hud_healthbarr.bin"
-IF REV_VER == 96
+IF REV_VER == VER_96F
 GFX_Play_HUD_SingleWinMarker: INCBIN "data/gfx/96f/play_hud_singlewinmarker.bin"
 GFX_Char_Cross: INCBIN "data/gfx/96f/char_cross.bin"
 ELSE
@@ -4361,7 +4366,13 @@ GFXAuto_Play_HUD_TimerInfinite:
 BG_Play_HUD_TimerInfinite: INCBIN "data/bg/play_hud_timerinfinite.bin"
 GFXAuto_Play_RoundFont:
 	dw $8800
+IF VER_EN
+	; The English version moves the text graphics to the bottom of the 8x16 tile.
+	; The Y position in OBJInfoInit_Play_RoundText was altered to compensate.
+	mGfxDef "data/gfx/en/play_roundfont.bin"
+ELSE
 	mGfxDef "data/gfx/play_roundfont.bin"
+ENDC
 
 OBJInfoInit_Play_RoundText: 
 	db $00 ; iOBJInfo_Status
@@ -4369,7 +4380,11 @@ OBJInfoInit_Play_RoundText:
 	db $00 ; iOBJInfo_OBJLstFlagsView
 	db $60 ; iOBJInfo_X
 	db $00 ; iOBJInfo_XSub
+IF VER_EN
+	db $7D ; iOBJInfo_Y
+ELSE
 	db $80 ; iOBJInfo_Y
+ENDC
 	db $00 ; iOBJInfo_YSub
 	db $00 ; iOBJInfo_SpeedX
 	db $00 ; iOBJInfo_SpeedXSub

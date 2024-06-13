@@ -10,64 +10,71 @@
 PUSHC
 
 NEWCHARMAP intro
-	CHARMAP " ", $40 
-	CHARMAP "1", $41
-	CHARMAP "9", $42
-	CHARMAP "5", $43
-	CHARMAP "年", $44 
-	CHARMAP "。", $45
-	CHARMAP "K", $46
-	CHARMAP "I", $47
-	CHARMAP "N", $48
-	CHARMAP "G", $49
-	CHARMAP "O", $4A
-	CHARMAP "F", $4B
-	CHARMAP "H", $4C
-	CHARMAP "T", $4D
-	CHARMAP "E", $4E
-	CHARMAP "R", $4F
-	CHARMAP "S", $50
-	CHARMAP "を", $51
-	CHARMAP "開", $52 
-	CHARMAP "催", $53 
-	CHARMAP "す", $54 
-	CHARMAP "る", $55
-	CHARMAP "対", $56 
-	CHARMAP "戦", $57 
-	CHARMAP "方", $58 
-	CHARMAP "式", $59 
-	CHARMAP "は", $5A 
-	CHARMAP "前", $5B 
-	CHARMAP "回", $5C 
-	CHARMAP "同", $5D 
-	CHARMAP "様", $5E 
-	CHARMAP "チ", $5F
-	CHARMAP "-", $60
-	CHARMAP "ム", $61
-	CHARMAP "に", $62
-	CHARMAP "て", $63
-	CHARMAP "と", $64
-	CHARMAP "り", $65
-	CHARMAP "行", $66 
-	CHARMAP "う", $67
-	CHARMAP "大", $68 
-	CHARMAP "会", $69 
-	CHARMAP "参", $6A 
-	CHARMAP "加", $6B 
-	CHARMAP "者", $6C 
-	CHARMAP "の", $6D
-	CHARMAP "再", $6E 
-	CHARMAP "心", $6F 
-	CHARMAP "待", $70 
-	CHARMAP "ち", $71
-	CHARMAP "し", $72
-	CHARMAP "い", $73
-	CHARMAP "以", $74
-	CHARMAP "上", $75
-	CHARMAP "・", $76 
-	CHARMAP "[", $77
-	CHARMAP "<R>", $78
-	CHARMAP "]", $79
+
+; [TCRF] The Japanese intro font was remapped from $40 to $00 for the English version.
+IF VER_EN
+TOFFSET = $00
+ELSE
+TOFFSET = $40
+ENDC
+	CHARMAP " ", TOFFSET + $00 
+	CHARMAP "1", TOFFSET + $01
+	CHARMAP "9", TOFFSET + $02
+	CHARMAP "5", TOFFSET + $03
+	CHARMAP "年", TOFFSET + $04 
+	CHARMAP "。", TOFFSET + $05
+	CHARMAP "K", TOFFSET + $06
+	CHARMAP "I", TOFFSET + $07
+	CHARMAP "N", TOFFSET + $08
+	CHARMAP "G", TOFFSET + $09
+	CHARMAP "O", TOFFSET + $0A
+	CHARMAP "F", TOFFSET + $0B
+	CHARMAP "H", TOFFSET + $0C
+	CHARMAP "T", TOFFSET + $0D
+	CHARMAP "E", TOFFSET + $0E
+	CHARMAP "R", TOFFSET + $0F
+	CHARMAP "S", TOFFSET + $10
+	CHARMAP "を", TOFFSET + $11
+	CHARMAP "開", TOFFSET + $12 
+	CHARMAP "催", TOFFSET + $13 
+	CHARMAP "す", TOFFSET + $14 
+	CHARMAP "る", TOFFSET + $15
+	CHARMAP "対", TOFFSET + $16 
+	CHARMAP "戦", TOFFSET + $17 
+	CHARMAP "方", TOFFSET + $18 
+	CHARMAP "式", TOFFSET + $19 
+	CHARMAP "は", TOFFSET + $1A 
+	CHARMAP "前", TOFFSET + $1B 
+	CHARMAP "回", TOFFSET + $1C 
+	CHARMAP "同", TOFFSET + $1D 
+	CHARMAP "様", TOFFSET + $1E 
+	CHARMAP "チ", TOFFSET + $1F
+	CHARMAP "-", TOFFSET + $20
+	CHARMAP "ム", TOFFSET + $21
+	CHARMAP "に", TOFFSET + $22
+	CHARMAP "て", TOFFSET + $23
+	CHARMAP "と", TOFFSET + $24
+	CHARMAP "り", TOFFSET + $25
+	CHARMAP "行", TOFFSET + $26 
+	CHARMAP "う", TOFFSET + $27
+	CHARMAP "大", TOFFSET + $28 
+	CHARMAP "会", TOFFSET + $29 
+	CHARMAP "参", TOFFSET + $2A 
+	CHARMAP "加", TOFFSET + $2B
+	CHARMAP "者", TOFFSET + $2C 
+	CHARMAP "の", TOFFSET + $2D
+	CHARMAP "再", TOFFSET + $2E
+	CHARMAP "心", TOFFSET + $2F
+	CHARMAP "待", TOFFSET + $30
+	CHARMAP "ち", TOFFSET + $31
+	CHARMAP "し", TOFFSET + $32
+	CHARMAP "い", TOFFSET + $33
+	CHARMAP "以", TOFFSET + $34
+	CHARMAP "上", TOFFSET + $35
+	CHARMAP "・", TOFFSET + $36 
+	CHARMAP "[", TOFFSET + $37
+	CHARMAP "<R>", TOFFSET + $38
+	CHARMAP "]", TOFFSET + $39
 	
 NEWCHARMAP hudchar
 	CHARMAP " ", $00 ; [TCRF] Empty space not used 
@@ -527,7 +534,7 @@ NEWCHARMAP charunlock
 	CHARMAP "ベ", $63
 	CHARMAP "ヤ", $64
 	CHARMAP "↓", $65
-	CHARMAP "/", $66
+	CHARMAP "↙", $66
 	CHARMAP "←", $67
 	CHARMAP "+", $68
 	CHARMAP "B", $69
@@ -538,7 +545,7 @@ NEWCHARMAP charunlock
 	CHARMAP "つ", $6E
 	CHARMAP "ペ", $6F
 	CHARMAP "(", $70
-	CHARMAP "<SUPER>", $71
+	CHARMAP "<大2>", $71
 	CHARMAP ")", $72
 	CHARMAP "エ", $73
 	CHARMAP "れ", $74
@@ -565,6 +572,7 @@ NEWCHARMAP charunlock
 	CHARMAP "む", $89
 	CHARMAP "り", $8A
 	CHARMAP "ち", $8B
+	CHARMAP "ポ", $8C ; English version only
 	
 NEWCHARMAP nakoruru
 	CHARMAP " ", $00
@@ -646,5 +654,16 @@ NEWCHARMAP nakoruru
 	CHARMAP "ほ", $4C
 	CHARMAP "ろ", $4D
 	CHARMAP "び", $4E
-
+	
+; English cutscene font
+NEWCHARMAP ascii
+	CHARMAP "↑", $01 ; ↑ ; Arrows ↓
+	CHARMAP "↗", $02 ; ↗ ; Arrows ↓
+	CHARMAP "→", $03 ; → ; Arrows ↓
+	CHARMAP "↘", $04 ; ↘ ; Arrows ↓
+	CHARMAP "↓", $05 ; ↓ ; Arrows ↓
+	CHARMAP "↙", $06 ; ↙ ; Arrows ↓
+	CHARMAP "←", $07 ; ← ; Arrows ↓
+	CHARMAP "↖", $08 ; ↖ ; Arrows ↓
+	CHARMAP "`", $60
 POPC         

@@ -100,6 +100,159 @@ GFX_Char_Athena_ShiningCrystalBitG4_A: INCBIN "data/gfx/char/athena_shiningcryst
 GFX_Char_Athena_ShiningCrystalBitG5: INCBIN "data/gfx/char/athena_shiningcrystalbitg5.bin"
 GFX_Char_Athena_KickAHD0: INCBIN "data/gfx/char/athena_kickahd0.bin"
 
+IF VER_EN
+
+PUSHC
+SETCHARMAP ascii
+
+TextDef_CutsceneBossUnlockEn:
+	dw $9980
+	db .end-.start
+.start:
+	db "RUGAL is", C_NL
+	db " still alive!", C_NL
+	db C_NL
+	db "I will help you", C_NL
+	db " fight him!"
+.end:
+TextDef_CutsceneBossUnlockEn1:
+	dw $9980
+	db .end-.start
+.start:
+	db "He is", C_NL
+	db " just a my dummy!", C_NL
+	db C_NL
+	db "I will show you real", C_NL
+	db " power of RUGAL!"
+.end:
+TextDef_CutsceneSaisyuMoveListEn0:
+	dw $9800
+	db .end-.start
+.start:
+	db "    SAISYU`s", C_NL
+	db C_NL
+	db "Special Moves", C_NL
+	db "  Dark Thrust", C_NL
+	db "               ↓↘→+B", C_NL
+	db "  Fire Ball", C_NL
+	db "               →↓↘+B", C_NL
+	db "  Fire Tackle", C_NL
+	db "             →↘↓↙←+B", C_NL
+	db C_NL
+.end:
+TextDef_CutsceneSaisyuMoveListEn1:
+	dw $99C0
+	db .end-.start
+.start:
+	db "Super Special Move", C_NL
+	db "  Serpent Wave", C_NL
+	db "           ↓↙←↙↓↘→+B"
+.end:
+TextDef_CutsceneRugalMoveListEn0:
+	dw $9800
+	db .end-.start
+.start:
+	db "    RUGAL`s", C_NL
+	db C_NL
+	db "Special Moves", C_NL
+	db "  Reppu Ken", C_NL
+	db "               ↓↘→+B", C_NL
+	db "  Keiser Wave", C_NL
+	db "            →←↙↓↘→+B", C_NL
+	db "  Genocide Cutter", C_NL
+	db "              ↓↙←↖+A", C_NL
+	db "  Dark Barrier", C_NL
+	db "               ↓↘→+A", C_NL
+	db "  God Press", C_NL
+	db "             →↘↓↙←+B", C_NL
+	db C_NL
+.end:
+TextDef_CutsceneRugalMoveListEn1:
+	dw $99C0
+	db .end-.start
+.start:
+	db "Super Special Move", C_NL
+	db "  Gigantic Pressure", C_NL
+	db "        →↘↓↙←→↘↓↙←+A"
+.end:
+TextDef_CutsceneBossUnlockCodeEn:
+	dw $98C0
+	db .end-.start
+.start:
+	db "Using SAISYU, RUGAL", C_NL
+	db C_NL
+	db "Press Select Button", C_NL
+	db " 3 Times While", C_NL
+	db " TAKARA Logo is", C_NL
+	db " appearing."
+.end:
+TextDef_CutsceneBossUnlockEn2:
+	dw $9980
+	db .end-.start
+.start:
+	db "Select me,", C_NL
+	db "And you can", C_NL
+	db " beat anybody!"
+.end:
+TextDef_CutsceneNakoruruUnlockEn0:
+	dw $9980
+	db .end-.start
+.start:
+	db "I still sense", C_NL
+	db " the dark power!"
+.end:
+TextDef_CutsceneNakoruruUnlockCodeEn:
+	dw $98C0
+	db .end-.start
+.start:
+	db "Using NAKORURU", C_NL
+	db C_NL
+	db "Press Select Button", C_NL
+	db " 20 Times While", C_NL
+	db " TAKARA Logo is", C_NL
+	db " appearing."
+.end:
+TextDef_CutsceneNakoruruUnlockEn1:
+	dw $9980
+	db .end-.start
+.start:
+	db "I will help you", C_NL
+	db " defeat him!"
+.end:
+TextDef_CutsceneNakoruruMoveListEn0:
+	dw $9800
+	db .end-.start
+.start:
+	db "    NAKORURU`s", C_NL
+	db C_NL
+	db "Special Moves", C_NL
+	db "  Amube Yatoro", C_NL
+	db "             →↘↓↙←+B", C_NL
+	db "  Annu Mutsube ←↙↓+B", C_NL
+	db "  Lela Mutsube ↓↘→+B", C_NL
+	db "  Kamui Ryuse  ←↓↙+B", C_NL
+	db "  MAMAHAHA Flight", C_NL
+	db "               ↓↙←+A", C_NL
+	db "  Kamui Mutsube", C_NL
+	db "        (M.Flight)+B", C_NL
+	db "  Yatoru Bokku", C_NL
+	db "      (M.Flight)+↓+B", C_NL
+.end:
+TextDef_CutsceneNakoruruMoveListEn1:
+	dw $99E0
+	db .end-.start
+.start:
+	db "Super Special Move", C_NL
+	db "  Elelyu Kamui Risse", C_NL
+	db "        →↘↓↙←→↘↓↙←+B"
+.end:
+
+POPC
+; =============== END OF BANK ===============
+; Junk area below.
+	mIncJunk "L137EE7"
+ELSE
 ; =============== END OF BANK ===============
 ; Junk area below.
 	mIncJunk "L137A60"
+ENDC

@@ -199,24 +199,40 @@ SECTION "EntryPoint", ROM0[$0100]
 	db   $00,$08,$11,$1F,$88,$89,$00,$0E,$DC,$CC,$6E,$E6,$DD,$DD,$D9,$99
 	db   $BB,$BB,$67,$63,$6E,$0E,$EC,$CC,$DD,$DC,$99,$9F,$BB,$B9,$33,$3E
 
-IF REV_VER == 96
+IF REV_VER == VER_96F
 	db   "NETTOU KOF 96",$00,$00	; title
 ELSE
 	db   "NETTOU KOF 95",$00,$00	; title
 ENDC
 	db   $00      		; DMG - classic gameboy
+IF REV_VER == VER_EU
+	db   $33,$38		; new license
+ELSE
 	db   $41,$37		; new license
+ENDC
 	db   $03      		; SGB flag: SGB capable
 	db   $01      		; cart type: MBC1
 	db   $04      		; ROM size: 512KiB
 	db   $00      		; RAM size: 0KiB
+IF VER_EN
+	db   $01      		; destination code: non-Japanese
+ELSE
 	db   $00      		; destination code: Japanese
+ENDC
 	db   $33      		; old license: SGB capable
 	db   $00      		; mask ROM version number
+	
+IF REV_VER == VER_EU
+	db   $D3      		; header check
+ELSE
 	db   $C7      		; header check
-IF REV_VER == 96
+ENDC
+	
+IF REV_VER == VER_96F
 	; Fake 96 forgets to update the header checksum, but the global checksum is ok
 	dw   $A527    		; global check
+ELIF REV_VER == VER_EU
+	dw   $0FC5    		; global check
 ELSE
 	dw   $B7B2    		; global check
 ENDC
@@ -235,9 +251,14 @@ EntryPoint:
 	;
 	; Clear memory range wSndSet-$CBBE.
 	; This is used by the sound driver and shared/mode-specific variables.
+	; (-$CBC1 in the EN version, for the two added text-related variables.
 	;
-	ld   hl, wSndSet		; HL = Initial address
+	ld   hl, wSndSet	; HL = Initial address
+IF VER_EN
+	ld   de, $0BC1		; DE = Bytes to clear
+ELSE
 	ld   de, $0BBF		; DE = Bytes to clear
+ENDC
 	ld   b, $00			; B = Value to repeat
 .clMem1:
 	ld   a, b
@@ -251,8 +272,14 @@ EntryPoint:
 	; Clear memory range wGFXBufInfo_Pl1+iGFXBufInfo_DestPtr_Low-$DFFF.
 	; This clears the sprite mapping / player / object areas.
 	;
-	ld   hl, wGFXBufInfo_Pl1+iGFXBufInfo_DestPtr_Low
+
+IF VER_EN
+	ld   hl, wGFXBufInfo_Pl1-$300
+	ld   de, $1100+$300 ; $300 extra bytes, for what ???
+ELSE	
+	ld   hl, wGFXBufInfo_Pl1
 	ld   de, $1100
+ENDC
 	ld   b, $00
 .clMem2:
 	ld   a, b
@@ -1053,8 +1080,13 @@ LCDCHandler_Title:
 		ldh  [rLCDC], a		
 		; Set next section ID
 		ld   [wLCDCSectId], a			; It just needs to be != 0
-		; Resume WINDOW on here
+		; Resume WINDOW on here.
+		; The English version does this earlier because of the taller copyright box.
+	IF VER_EN
+		ld   a, $77
+	ELSE
 		ld   a, $87
+	ENDC
 		ldh  [rLYC], a
 	pop  af
 	reti
@@ -1442,7 +1474,12 @@ VBlank_SetInitialSect:
 	jp   z, .noScanlineInt	; If not, ignore this
 	ld   a, LCDC_PRIORITY|LCDC_OBJENABLE|LCDC_OBJSIZE|LCDC_WENABLE|LCDC_WTILEMAP|LCDC_ENABLE
 	ldh  [rLCDC], a
-	ld   a, $5F				; Line where the parallax effect starts		
+IF VER_EN
+	; It starts 1 tile higher in the English version to make space for the extended copyright.
+	ld   a, $57
+ELSE
+	ld   a, $5F				; Line where the parallax effect starts
+ENDC	
 	ldh  [rLYC], a
 	ld   a, $1B
 	ldh  [rBGP], a
@@ -4206,11 +4243,11 @@ RandLY:
 	ret
 
 ; =============== LoadGFX_1bppFont_Default ===============
-; Loads the font GFX with default settings.
+; Loads the ASCII font GFX with default settings.
 LoadGFX_1bppFont_Default:
 	ldh  a, [hROMBank]
 	push af
-	ld   a, BANK(FontDef_Default) ; BANK $1F
+	ld   a, BANK(FontDef_Default) ; BANK $1F (JPN), BANK $18 (EU)
 	ld   [MBC1RomBank], a
 	ldh  [hROMBank], a
 	ld   hl, FontDef_Default
@@ -4219,6 +4256,64 @@ LoadGFX_1bppFont_Default:
 	ld   [MBC1RomBank], a
 	ldh  [hROMBank], a
 	ret
+	
+IF VER_EN
+
+; =============== Cutscene_InitFont ===============
+; Loads the English cutscene font GFX and its related code.
+; This is still ASCII, but also includes lowercase characters.
+; IN
+; - A: Added to the Tile ID after the conversion from ASCII.
+;      Must be consistent with the destination ptr in DE (ie: if DE is $9000, A must be $00)
+; - DE: Destination ptr to VRAM.
+Cutscene_InitFont:
+	; Save the tile offset for when we call TextPrinter_MultiFrameFar_*
+	ld   [wTextPrintTileOffset], a
+	
+	ldh  a, [hROMBank]
+	push af
+	
+		;
+		; Load the English cutscene font
+		;
+		ld   a, BANK(FontDef_Cutscene) ; BANK $1D
+		ld   [MBC1RomBank], a
+		ldh  [hROMBank], a
+		ld   hl, FontDef_Cutscene+$02 ; Start from the tile count
+		call LoadGFX_1bppFont.fromTileCount
+		
+		;
+		; Copy the text printer subroutine and the ASCII conversion table to WRAM.
+		; 
+		ld   a, BANK(TextPrinter_MultiFrameFarCode) ; BANK $15
+		ld   [MBC1RomBank], a
+		ldh  [hROMBank], a
+		
+		; Prepare the source/destination pointers.
+		; The first two bytes tell how many bytes to copy over.
+		ld   hl, TextPrinter_MultiFrameFarCode	; HL = Source
+		; Note how it starts writing from $CC02, not $CC00.
+		; Doing so keeps the absolute pointers relatively consistent between ROM and RAM (the two lowest digits will match).
+		ld   de, TextPrinter_MultiFrameFar+$02	; DE = Destination
+		ldi  a, [hl]	; BC = BytesLeft
+		ld   c, a
+		ldi  a, [hl]
+		ld   b, a
+		; Start writing $4002 to $CC02, continue until we're done
+	.loop:
+		ldi  a, [hl]		; Read byte, SourcePtr++
+		ld   [de], a		; Copy it over
+		inc  de				; DestPtr++
+		dec  bc				; BytesLeft--
+		ld   a, b
+		or   c				; Have we copied all bytes?
+		jp   nz, .loop		; If not, loop
+		
+	pop  af
+	ld   [MBC1RomBank], a
+	ldh  [hROMBank], a
+	ret
+ENDC
 
 ; =============== LoadGFX_1bppFont ===============
 ; Loads the font graphics depending on the specified settings.
@@ -16332,5 +16427,9 @@ MoveInputS_CheckEasyMoveKeys:
 	
 ; =============== END OF BANK ===============
 ; Junk area below.
-; Contains various duplicates of the last few subroutines in the bank.
+IF REV_VER == VER_EU
+	mIncJunk "L003F93"
+ELSE
+	; Contains various duplicates of the last few subroutines in the bank.
 	mIncJunk "L003F5F"
+ENDC
