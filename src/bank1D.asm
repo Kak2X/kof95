@@ -2,7 +2,7 @@
 ; =============== START OF MODULE Intro ===============
 ;
 
-IF REV_VER == VER_96F
+IF VER_96F
 GFXDef_Intro_KofLogo: mGfxDef "data/gfx/96f/intro_koflogo.bin"
 	; Unused, partial duplicate of GFXDef_Intro_KyoBG0
 	mIncJunk "../padding_96f/L1D44F1"
@@ -45,7 +45,7 @@ Text_Intro4:
 	db "            "
 POPC
 
-IF REV_VER == VER_96F
+IF VER_96F
 ; GFXDef_Intro_KyoBG0 replaces GFXDef_IntroBG0.
 ; The second part is at the end of the bank, replacing end of bank junk data.
 GFXDef_Intro_KyoBG0: mGfxDef "data/gfx/96f/intro_kyo_bg0.bin"
@@ -59,7 +59,7 @@ GFXDef_IntroBG1: mGfxDef "data/gfx/intro_bg1.bin"
 ENDC
 
 
-IF REV_VER == VER_96F
+IF VER_96F
 ; BG_Intro_KofLogo replaces BG_Intro_Sun.
 BG_Intro_Sun: ; Replaced by BG_Intro_KofLogo
 BG_Intro_KofLogo: INCBIN "data/bg/96f/intro_koflogo.bin"
@@ -118,7 +118,7 @@ Module_Intro:
 	ld   [wOBJScrollX], a
 	ld   [wOBJScrollY], a
 	
-IF REV_VER == VER_96F
+IF VER_96F
 	; Load VRAM for the KOF logo
 	ld   hl, GFXDef_Intro_KofLogo
 	ld   de, $9000
@@ -196,7 +196,7 @@ ENDC
 	
 	ei   
 	
-IF REV_VER == VER_96F
+IF VER_96F
 	; Fake 96 cuts the wait in half
 	ld   b, 28
 ELSE
@@ -221,7 +221,7 @@ ENDC
 	ld   [wIntroActPtr_High], a
 	ld   [wIntroActPtr_Low], a
 	
-IF REV_VER == VER_96F
+IF VER_96F
 	; Wait 92 frames at the KOF logo, don't cut the title screen when aborting early
 	ld   bc, $5C
 	call Intro_Delay
@@ -243,7 +243,7 @@ ENDC
 	; Wait 30 frames
 	ld   bc, $001E
 	call Intro_Delay
-IF REV_VER == VER_96F
+IF VER_96F
 	; Text printing skipped
 	jp   SubModule_Intro_Chars
 ELSE
@@ -540,7 +540,7 @@ SubModule_Intro_Chars:
 	ld   de, $8000
 	call CopyTilesAutoNum
 	
-IF REV_VER == VER_96F
+IF VER_96F
 	ld   hl, GFXDef_Intro_KyoBG0	; Backgrounds, logo
 	ld   de, $9000
 	call CopyTilesAutoNum
@@ -562,7 +562,7 @@ ENDC
 	ld   b, $20
 	ld   c, $10
 	call CopyBGToRect
-IF REV_VER == VER_96F
+IF VER_96F
 	ld   de, BG_Intro_Kyo		; Crusty Kyo
 ELSE
 	ld   de, BG_Intro_Moon		; Iori BG on the bottom
@@ -721,7 +721,7 @@ IntroAct_KyoMvLeft:
 	ld   hl, hScrollX
 	ld   a, [hl]
 	cp   $80			; Reached the target already? (hScrollX >= $80)
-IF REV_VER == VER_96F
+IF VER_96F
 	; Skip this entirely in the fake 96.
 	; Immediately switch to the Iori mode, which has a crusty Kyo move to the right.
 	jp   IntroAct_IoriMvRightInit
@@ -882,7 +882,7 @@ IntroAct_IoriMvRight:
 	push de					; DE += 1px
 	pop  hl
 	ld   bc, +$0100
-IF REV_VER == VER_96F
+IF VER_96F
 	; Fake 96 keeps Iori off-screen, only moving the background (Kyo).
 	nop
 ELSE
@@ -918,7 +918,7 @@ IntroAct_IoriWait:
 	ld   a, [wIntroActTimer]
 	inc  a
 	ld   [wIntroActTimer], a
-IF REV_VER == VER_96F
+IF VER_96F
 	cp   $A0 ; Significantly more in fake 96
 ELSE
 	cp   $32
@@ -946,7 +946,7 @@ IntroAct_Logo:
 	; Next subscene after 10 * 3 * 2 frames
 	ld   a, [wIntroActTimer]
 	cp   $0A
-IF REV_VER == VER_96F
+IF VER_96F
 	; Fake 96 ends it early.
 	jp   Intro_SwitchToTitle
 ELSE
@@ -1236,7 +1236,7 @@ Title_LoadVRAM_Mini:
 	call CopyTilesHBlankAutoNum
 	ret  
 
-IF REV_VER == VER_96F
+IF VER_96F
 	; Altered
 	GFXDef_Title_Logo0: mGfxDef "data/gfx/96f/title_logo0.bin"
 	GFXDef_Title_Logo1: mGfxDef "data/gfx/96f/title_logo1.bin"
@@ -1345,7 +1345,7 @@ Play_ColiBoxTbl:
 ;       padding data around it to RAM.
 ;       Removed in 96 since the collision array fits in the bank with the collision check code.
 Play_CopyColiBoxToRAM:
-	IF FIX_BUGS == 1
+	IF FIX_BUGS
 		ld   b, (Play_ColiBoxTbl.end-Play_ColiBoxTbl)/ 4 ; B = Number of entries to copy
 	ELSE
 		ld   b, $00				; B = Number of entries to copy
@@ -1363,7 +1363,7 @@ ENDR
 	jp   nz, .loop		; If not, loop
 	ret
 	
-IF REV_VER == VER_96F
+IF VER_96F
 ; Second part of the Crusty Kyo graphics, replacing the repeating junk pattern
 GFXDef_Intro_KyoBG1: mGfxDef "data/gfx/96f/intro_kyo_bg1.bin"
 ; =============== END OF BANK ===============

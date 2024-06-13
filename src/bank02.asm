@@ -6311,7 +6311,7 @@ MoveC_Yuri_HyakuRetsuBintaH:
 ; --------------- frame #0 ---------------
 ; Run startup.
 .obj0:
-IF FIX_BUGS == 1
+IF FIX_BUGS
 	mMvC_ValFrameEnd .anim
 		mMvC_SetAnimSpeed $10
 		jp   .anim

@@ -36,7 +36,7 @@ SGB_SendBorderData:
 	ld   bc, $0010
 	call SGB_SendBorderData_WaitAfterSend
 	
-IF FIX_BUGS == 0
+IF !FIX_BUGS
 	;
 	; Attempt to erase the GFX area we've used for the transfers.
 	; [BUG] Not only this is pointless, but it's done while the display is enabled,
@@ -230,7 +230,7 @@ ENDC
 
 ; [TCRF] There's a bit more to the backgrounds than what's used, but the unused
 ;        portions are just padding areas.
-IF REV_VER == VER_96F
+IF VER_96F
 GFXDef_Play_Stage_00: mGfxDef "data/gfx/96f/play_stage_00.bin"
 BG_Play_Stage_00: INCBIN "data/bg/96f/play_stage_00.bin"
 BG_Play_Stage_00_Unused: INCBIN "data/bg/96f/play_stage_00_unused.bin"

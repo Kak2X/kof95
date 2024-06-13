@@ -1466,7 +1466,7 @@ MoveC_Terry_RisingTackle:
 		; [BUG] The animation speed is currently set to ANIMSPEED_INSTANT.
 		;       This means the first time we get here is also when mMvC_ValFrameEnd triggers.
 		;       Not executing .obj2_cont now means the mMvC_ValFrameEnd branch below will never execute.
-		IF FIX_BUGS == 0
+		IF !FIX_BUGS
 			jp   .doGravity
 		ENDC
 .obj2_cont:
@@ -2032,7 +2032,7 @@ ProjC_Terry_PowerGeyser:
 		call OBJLstS_Hide
 		ret 
 	
-IF REV_VER == VER_96F
+IF VER_96F
 GFXDef_Play_Stage_03: mGfxDef "data/gfx/96f/play_stage_03.bin"
 BG_Play_Stage_03: INCBIN "data/bg/96f/play_stage_03.bin"
 BG_Play_Stage_03_Unused: INCBIN "data/bg/96f/play_stage_03_unused.bin"
@@ -2047,7 +2047,7 @@ ENDC
 ; =============== START OF MODULE Win/Cutscene ===============
 ;
 
-IF REV_VER == VER_96F
+IF VER_96F
 	; [POI] GFXDef_Cutscene_Rugal is a bit fucked in the fake 96.
 	;       BG_Play_Stage_03_Unused is 16 bytes longer than it should be, shifting the rest down.
 	;       Those 16 bytes (1 tile) are reclaimed from the middle of cutscene_rugal.bin"

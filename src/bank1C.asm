@@ -338,7 +338,7 @@ Win_ChkNormEndingCutscene:
 	; Omega Rugal dies
 	ld   b, BANK(SubModule_CutsceneRugalDefeat) ; BANK $03
 	ld   hl, SubModule_CutsceneRugalDefeat
-IF REV_VER == VER_96F
+IF VER_96F
 	nop ; [POI] The fake 96 disables all cutscenes.
 ELSE
 	rst  $08
@@ -346,7 +346,7 @@ ENDC
 	; Ending text
 	ld   b, BANK(SubModule_CutsceneEpilogue) ; BANK $0A
 	ld   hl, SubModule_CutsceneEpilogue
-IF REV_VER == VER_96F
+IF VER_96F
 	nop
 ELSE
 	rst  $08
@@ -389,7 +389,7 @@ ENDM
 	bit  MODEB_TEAM, a						; Playing in Team mode?
 	jp   nz, Win_ChkCutsceneTeam			; If so, jump
 	
-IF REV_VER == VER_96F
+IF VER_96F
 	; [POI] The cutscene disabling causes the boss rounds to malfunction!
 	;       They were never meant to go through the character select random picker.
 	ld   a, [wCharSeqId]
@@ -453,7 +453,7 @@ Win_RugalDefeatCutsceneSingle:
 	; Omega Rugal dies
 	ld   b, BANK(SubModule_CutsceneRugalDefeat) ; BANK $03
 	ld   hl, SubModule_CutsceneRugalDefeat
-IF REV_VER == VER_96F
+IF VER_96F
 	nop
 ELSE
 	rst  $08
@@ -461,7 +461,7 @@ ENDC
 	; Ending text
 	ld   b, BANK(SubModule_CutsceneEpilogue) ; BANK $0A
 	ld   hl, SubModule_CutsceneEpilogue
-IF REV_VER == VER_96F
+IF VER_96F
 	nop
 ELSE
 	rst  $08
@@ -494,7 +494,7 @@ Win_StartSpecRoundSingle:
 ; See also: Win_ChkCutsceneSingle
 Win_ChkCutsceneTeam:
 
-IF REV_VER == VER_96F
+IF VER_96F
 	ld   a, [wCharSeqId]
 	cp   STAGESEQ_SAISYU
 	mNoCutscene
@@ -568,7 +568,7 @@ Win_RugalDefeatCutsceneTeam:
 	; Omega Rugal dies
 	ld   b, BANK(SubModule_CutsceneRugalDefeat) ; BANK $03
 	ld   hl, SubModule_CutsceneRugalDefeat
-IF REV_VER == VER_96F
+IF VER_96F
 	nop
 ELSE
 	rst  $08
@@ -576,7 +576,7 @@ ENDC
 	; Ending text
 	ld   b, BANK(SubModule_CutsceneEpilogue) ; BANK $0A
 	ld   hl, SubModule_CutsceneEpilogue
-IF REV_VER == VER_96F
+IF VER_96F
 	nop
 ELSE
 	rst  $08

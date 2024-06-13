@@ -318,7 +318,7 @@ OBJLstPtrTable_Nakoruru_Intro:
 	dw OBJLstHdrA_Nakoruru_Intro0_A, OBJLstHdrB_Nakoruru_Intro0_B
 	dw OBJLstHdrA_Nakoruru_Intro1_A, OBJLstHdrB_Nakoruru_Intro0_B
 	dw OBJLstHdrA_Nakoruru_Intro2_A, OBJLstHdrB_Nakoruru_Intro0_B
-IF UNUSED_NAKORURU_INTRO == 1
+IF UNUSED_NAKORURU_INTRO
 	dw OBJLstHdrA_Nakoruru_KickHM0, OBJLSTPTR_NONE
 	dw OBJLstHdrA_Nakoruru_Unused_Intro3, OBJLSTPTR_NONE
 	dw OBJLstHdrA_Nakoruru_Unused_Intro4_A, OBJLstHdrB_Nakoruru_Unused_Intro4_B

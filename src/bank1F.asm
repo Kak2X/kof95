@@ -2447,7 +2447,7 @@ INCLUDE "data/sound/sfx_unused_de.asm"
 ; - BC: Ptr to wPlInfo
 ; - DE: Ptr to respective wOBJInfo
 Play_CPU_Do:
-IF NO_CPU_AI == 1
+IF NO_CPU_AI
 	ret
 ELSE
 	;
@@ -5138,7 +5138,7 @@ SGB_ApplyWinPicPalSet:
 	.picR:
 		push de
 			; Seek to 3-* palette
-IF FIX_BUGS == 1
+IF FIX_BUGS
 			ld   hl, wSGBWinPacketSide+9
 ELSE
 			ld   hl, wSGBWinPacketSide+8
@@ -6238,8 +6238,7 @@ ENDC
 ; - A: Action ID or DMG Sound ID
 Sound_ReqPlayExId:
 
-IF NO_SGB_SOUND
-ELSE
+IF !NO_SGB_SOUND
 	ld   hl, wMisc_C025
 	bit  MISCB_IS_SGB, [hl]		; SGB hardware?
 	jp   nz, .sgb				; If so, jump

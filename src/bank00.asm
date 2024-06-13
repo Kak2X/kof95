@@ -203,7 +203,7 @@ SECTION "EntryPoint", ROM0[$0100]
 	db   $00,$08,$11,$1F,$88,$89,$00,$0E,$DC,$CC,$6E,$E6,$DD,$DD,$D9,$99
 	db   $BB,$BB,$67,$63,$6E,$0E,$EC,$CC,$DD,$DC,$99,$9F,$BB,$B9,$33,$3E
 
-IF REV_VER == VER_96F
+IF VER_96F
 	db   "NETTOU KOF 96",$00,$00	; title
 ELSE
 	db   "NETTOU KOF 95",$00,$00	; title
@@ -235,7 +235,7 @@ ELSE
 	db   $C7      		; header check
 ENDC
 	
-IF REV_VER == VER_96F
+IF VER_96F
 	; Fake 96 forgets to update the header checksum, but the global checksum is ok
 	dw   $A527    		; global check
 ELIF VER_US
@@ -652,7 +652,7 @@ OAMDMACode:
 ; =============== DEFAULT SETTINGS ===============
 DefaultSettings:
 	db DIFFICULTY_NORMAL ; Difficulty: Normal
-IF INF_TIMER == 1
+IF INF_TIMER
 	db TIMER_INFINITE ; Timer: inf.
 ELSE
 	db $90 ; Timer: 90 secs
@@ -1214,7 +1214,7 @@ MAX_TILE_BUFFER_COPY EQU $03
 ; - 3: Ptr to wGFXBufInfo structure
 MACRO mVBlank_CopyPlTiles
 
-IF HITSTOP_FULL_DAMAGE == 0
+IF !HITSTOP_FULL_DAMAGE
 	;
 	; Deal less damage during hitstop by default.
 	;
@@ -6619,7 +6619,7 @@ Play_Pl_ChkKickAHB:
 
 ; Declares a fixable include key
 MACRO gi
-	IF GOOD_INPUTS == 1
+	IF GOOD_INPUTS
 		db \1
 	ELSE
 		db KEY_RIGHT|KEY_LEFT|KEY_UP|KEY_DOWN
@@ -15267,7 +15267,7 @@ HitTypeC_GrabStart:
 	ld   hl, iPlInfo_Flags1
 	
 	; [BUG] Forgot the indexing!
-	IF FIX_BUGS == 1
+	IF FIX_BUGS
 		add  hl, bc
 	ENDC
 	res  PF1B_INVULN, [hl]
@@ -15853,7 +15853,7 @@ Play_Pl_SetHitType:
 			bit  PF0B_AIR, [hl]					; Are we in the air?
 			jp   z, Play_Pl_SetHitType_RetClear	; If not, return
 			
-		IF AIRTHROW_CPU == 0
+		IF !AIRTHROW_CPU
 			;
 			; [POI] The CPU can't be thrown in the air.
 			;
@@ -16374,7 +16374,7 @@ Play_Pl_ApplyDamageToStats:
 	;
 	or   a					; Health != 0?
 	jp   nz, .ret			; If so, return
-IF LESS_SLOWDOWN == 1
+IF LESS_SLOWDOWN
 	ld   a, $0A				; For 10 frames...
 	ld   [wPlaySlowdownTimer], a
 	ld   a, $01				; Run gameplay every other frame

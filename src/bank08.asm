@@ -442,7 +442,7 @@ MoveC_Billy_ChouKaenSenpuuKon:
 		mMvC_ChkFrame $03, .setDamage1
 		mMvC_ChkFrame $04, .setDamage0
 	; [BUG] Incorrect sequence value
-	IF FIX_BUGS == 0
+	IF !FIX_BUGS
 		mMvC_ChkFrame $03, .setDamage1
 	ELSE
 		mMvC_ChkFrame $05, .setDamage1

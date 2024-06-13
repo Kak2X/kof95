@@ -1178,7 +1178,7 @@ MoveC_Nakoruru_KamuiMutsube:
 		mMvC_PlaySound SCT_MOVEJUMP_A
 		
 		; Set dive trajectory
-	IF FIX_BUGS == 1
+	IF FIX_BUGS
 		mMvC_ChkMove MOVE_NAKORURU_KAMUI_MUTSUBE_H, .obj1_setJumpH
 	ELSE
 		ld   hl, iPlInfo_MoveId

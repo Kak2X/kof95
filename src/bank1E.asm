@@ -571,7 +571,7 @@ Title_Mode_ModeSelect:
 .chkAct:
 	cp   MODESELECT_ACT_EXIT
 	jp   z, TitleSubMenu_Exit
-IF REV_VER == VER_96F
+IF VER_96F
 	; Fake 96 switches the two strings around
 	cp   MODESELECT_ACT_TEAM1P
 	jp   z, .single1P
@@ -1815,7 +1815,7 @@ Title_UpdateParallaxCoords:
 	
 	ld   hl, -$0040		; DE -= $00.40
 	add  hl, de
-IF REV_VER == VER_96F
+IF VER_96F
 	; The cloud layer doesn't scroll here, DE stays the same
 	nop
 	nop
@@ -1933,7 +1933,7 @@ TextDef_Menu_Title:
 ; Fake 96 switches around the two strings, and alters the code to account for it. (see Title_Mode_ModeSelect)
 TextDef_Menu_SinglePlay:
 	dw $9924
-IF REV_VER == VER_96F
+IF VER_96F
 	mTxtDef "TEAM PLAY"
 ELSE
 	mTxtDef "SINGLE PLAY"
@@ -1941,7 +1941,7 @@ ENDC
 
 TextDef_Menu_TeamPlay:
 	dw $9964
-IF REV_VER == VER_96F
+IF VER_96F
 	mTxtDef "SINGLE PLAY"
 ELSE
 	mTxtDef "TEAM PLAY"
@@ -2064,7 +2064,7 @@ SGBPacket_Options_StopSnd:
 
 GFXDef_CharSel_BG0: mGfxDef "data/gfx/charsel_bg0.bin"
 
-IF REV_VER == VER_96F
+IF VER_96F
 ; Altered cross and placeholder slots
 GFXDef_CharSel_BG1: mGfxDef "data/gfx/96f/charsel_bg1.bin"
 GFXDef_CharSel_Cross: mGfxDef "data/gfx/96f/charsel_cross.bin"
@@ -3875,7 +3875,7 @@ CharSel_PrintCharName:
 			; Blank out the old name
 			push bc
 				ld   hl, TextC_Char_None
-			IF REV_VER == VER_96F
+			IF VER_96F
 				; [BUG] The fake 96 targets the next row by mistake
 				ld   de, BG_CHARSEL_P2NAME-$07+BG_TILECOUNT_H
 			ELSE
@@ -3957,7 +3957,7 @@ CharSel_PrintCharName:
 ; =============== CharSel_CursorPosTable ===============
 ; Maps character IDs to cursor sprite positions.
 CharSel_CursorPosTable:
-IF REV_VER == VER_96F
+IF VER_96F
 YOFFSET = $28 ; Shifted down
 ELSE
 YOFFSET = 0
@@ -3985,7 +3985,7 @@ ENDC
 ; Ptr table to the starting tilemap positions on 2P side, indexed by character ID.
 ; The pointer for each character should always be equal to $99B3-(name length).
 CharSel_CharNameBGPtrTbl:
-IF REV_VER == VER_96F
+IF VER_96F
 TOFFSET = -(BG_TILECOUNT_H*7) ; Shifted up 7 tiles
 ELSE
 TOFFSET = 0
@@ -4256,7 +4256,7 @@ CharSel_DrawUnlockedChars:
 
 	; Nakoruru is only drawn when the "All Characters" dip switch is set
 	ld   a, b
-IF REV_VER == VER_96F
+IF VER_96F
 	; Fake 96 draws all characters by causing the check to always fail, same for the bosses.
 	cp   $18
 ELSE
@@ -4275,14 +4275,14 @@ ENDC
 .chkBoss:;J
 	ld   a, b
 	
-IF REV_VER == VER_96F
+IF VER_96F
 	cp   $18
 ELSE
 	cp   CHAR_ID_SAISYU/2		; Trying to draw Saisyu's portrait?
 ENDC
 	jp   z, .chkUnlockBoss		; If so, jump
 	
-IF REV_VER == VER_96F
+IF VER_96F
 	cp   $18
 ELSE
 	cp   CHAR_ID_RUGAL/2		; Trying to Rugal's Saisyu's portrait?
@@ -4359,7 +4359,7 @@ ENDC
 ; Portraits are 3 tiles wide and 3 tiles high, and their origin is the top-left tile.
 ;
 CharSel_IdBGMapTbl:
-IF REV_VER == VER_96F
+IF VER_96F
 TOFFSET = BG_TILECOUNT_H*5 ; 5 tiles down
 ELSE
 TOFFSET = 0
@@ -4495,7 +4495,7 @@ TextDef_CharSel_TeamTitle:
 ; =============== START OF MODULE OrdSel ===============
 ;
 
-IF REV_VER == VER_96F
+IF VER_96F
 GFXDef_OrdSel_NumPic: mGfxDef "data/gfx/96f/ordsel_numpic.bin"
 ELSE
 GFXDef_OrdSel_NumPic: mGfxDef "data/gfx/ordsel_numpic.bin"

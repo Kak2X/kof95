@@ -1389,7 +1389,7 @@ MoveC_Rugal_GodPress:
 		ld   [wPlayPlThrowActId], a
 		mMvC_SetDamageNext $08, HITTYPE_GRAB_UB_SYNC, PF3_HEAVYHIT
 		mMvC_SetDamage $08, HITTYPE_GRAB_UB_SYNC, PF3_HEAVYHIT
-	IF FIX_BUGS == 1
+	IF FIX_BUGS
 		jp   .ret
 	ELSE
 		jp   MoveC_Rugal_GiganticPressure.ret
@@ -3297,7 +3297,7 @@ MoveC_Athena_PhoenixBomb:
 ; --------------- frame #4 ---------------
 ; Recovery when landed on the ground.
 .chkEnd:
-IF FIX_BUGS == 1
+IF FIX_BUGS
 	mMvC_ValFrameEnd .anim
 ELSE
 	mMvC_ValFrameEnd MoveC_Athena_ThrowA.anim
