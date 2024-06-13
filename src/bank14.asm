@@ -89,4 +89,8 @@ GFX_Char_Kensou_PunchFH2: INCBIN "data/gfx/char/kensou_punchfh2.bin"
 
 ; =============== END OF BANK ===============
 ; Junk area below.
+IF VER_US
+	mIncJunk "../padding_us/L147BE0"
+ELSE
 	mIncJunk "L147BE0"
+ENDC

@@ -101,9 +101,30 @@ OBJLstHdrA_Title_SNKCopyright:
 	dw .bin ; iOBJLstHdrA_DataPtr
 	db $00 ; iOBJLstHdrA_YOffset
 .bin:
-IF VER_EN
+IF VER_US
+; "(C) SNK 1995" (lowered)
+; "LICENSED TO NINTENDO"
+	db $10 ; OBJ Count
+	;    Y   X  ID+FLAG
+	db $50,$00,$1E ; $00
+	db $50,$08,$20 ; $01
+	db $50,$10,$22 ; $02
+	db $50,$18,$24 ; $03
+	db $50,$20,$26 ; $04
+	db $50,$28,$28 ; $05
+	db $60,$00,$2A ; $06
+	db $60,$08,$2C ; $07
+	db $60,$10,$2E ; $08
+	db $60,$18,$30 ; $09
+	db $60,$20,$32 ; $0A
+	db $60,$28,$34 ; $0B
+	db $60,$30,$36 ; $0C
+	db $60,$38,$38 ; $0D
+	db $60,$40,$3A ; $0E
+	db $60,$48,$3C ; $0F
+ELIF VER_EN
 ; "(C) SNK 1995"
-; "LICENSED BY NINTENDO"/"LICENSED TO NINTENDO"
+; "LICENSED BY NINTENDO"
 	db $10 ; OBJ Count
 	;    Y   X  ID+FLAG
 	db $48,$00,$1E ; $00

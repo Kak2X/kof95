@@ -120,7 +120,11 @@ TextDef_CutsceneBossUnlockEn1:
 	db .end-.start
 .start:
 	db "He is", C_NL
+IF VER_US || FIX_BUGS
+	db " just a dummy!", C_NL
+ELSE
 	db " just a my dummy!", C_NL
+ENDC
 	db C_NL
 	db "I will show you real", C_NL
 	db " power of RUGAL!"
@@ -248,11 +252,14 @@ TextDef_CutsceneNakoruruMoveListEn1:
 .end:
 
 POPC
+ENDC
+
 ; =============== END OF BANK ===============
 ; Junk area below.
+IF VER_US
+	mIncJunk "../padding_us/L137EE4"
+ELIF VER_EN
 	mIncJunk "L137EE7"
 ELSE
-; =============== END OF BANK ===============
-; Junk area below.
 	mIncJunk "L137A60"
 ENDC

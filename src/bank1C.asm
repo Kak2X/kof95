@@ -1691,7 +1691,9 @@ TextDef_GameOver:
 	mTxtDef "GAME  OVER"
 ; =============== END OF BANK ===============
 ; Junk area below.
-IF VER_EN
+IF VER_US
+	mIncJunk "../padding_us/L1C7C6F"
+ELIF VER_EN
 	mIncJunk "L1C7C6F"
 ELSE
 	mIncJunk "L1C7CD9"

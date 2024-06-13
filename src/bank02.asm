@@ -7690,7 +7690,7 @@ MoveC_Kim_HouOuKyaku:
 	ret
 ; =============== END OF BANK ===============
 ; Junk area below
-IF REV_VER == VER_EU
+IF VER_EN
 	mIncJunk "L027E1A"
 ELSE
 	mIncJunk "L027E11"

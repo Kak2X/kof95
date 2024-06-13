@@ -1573,4 +1573,8 @@ GFX_Char_Nakoruru_Unused_Intro3: INCBIN "data/gfx/char/nakoruru_unused_intro3.bi
 
 ; =============== END OF BANK ===============
 ; Junk area below.
+IF VER_US
+	mIncJunk "../padding_us/L067FB0"
+ELSE
 	mIncJunk "L067FB0"
+ENDC

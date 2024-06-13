@@ -14,6 +14,11 @@ kof95e.map
 kof95e.o
 kof95e.sym
 kof95e.sn*
+kof95u.gb
+kof95u.map
+kof95u.o
+kof95u.sym
+kof95u.sn*
 
 # provide your own comparision rom
 original_jp.gb
@@ -25,6 +30,9 @@ original_96f.sym
 original_eu.gb
 original_eu.link
 original_eu.sym
+original_us.gb
+original_us.link
+original_us.sym
 
 # not necessary
 tempconv.txt

@@ -87,8 +87,8 @@ IF LABEL_JUNK == 1
 Padding_\@:
 ENDC
 	IF SKIP_JUNK == 0
-		IF REV_VER == VER_EU
-			INCBIN STRCAT("padding_eu/", \1, ".bin")
+		IF VER_EN
+			INCBIN STRCAT("padding_en/", \1, ".bin")
 		ELSE
 			INCBIN STRCAT("padding/", \1, ".bin")
 		ENDC

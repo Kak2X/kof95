@@ -5835,7 +5835,10 @@ Module_TakaraLogo:
 	; The English version extracted the code to their own subroutines.
 	; This organization was kept for 96, even with the Laguna Logo not present.
 IF VER_EN
-	call LagunaLogo_Do
+
+	IF VER_EU
+		call LagunaLogo_Do
+	ENDC
 	call TakaraLogo_Do
 	
 	; Switch module
@@ -6389,7 +6392,9 @@ ENDM
 	ret
 ; =============== END OF BANK ===============
 ; Junk area below.
-IF VER_EN
+IF VER_US
+	mIncJunk "../padding_us/L1F7FD7"
+ELIF VER_EN
 	mIncJunk "L1F7FDA"
 ELSE
 	mIncJunk "L1F7C92"

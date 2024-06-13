@@ -7245,7 +7245,9 @@ ModeSelect_GetCtrlFromSerial:
 	
 ; =============== END OF BANK ===============
 ; Junk area below, contains a repeated duplicate of the above subroutines.
-IF VER_EN
+IF VER_US
+	mIncJunk "../padding_us/L1E7ED6"
+ELIF VER_EN
 	mIncJunk "L1E7ED6"
 ELSE
 	mIncJunk "L1E7F7C"

@@ -1237,26 +1237,38 @@ Title_LoadVRAM_Mini:
 	ret  
 
 IF REV_VER == VER_96F
-; Altered
-GFXDef_Title_Logo0: mGfxDef "data/gfx/96f/title_logo0.bin"
-GFXDef_Title_Logo1: mGfxDef "data/gfx/96f/title_logo1.bin"
-BG_Title_Logo: INCBIN "data/bg/96f/title_logo.bin"
-; Remapped blank tiles from $01 to $00 due to graphical differences
-BG_Title_Clouds: INCBIN "data/bg/96f/title_clouds.bin"
-; Copyright year changed to 1996
-GFXDef_TitleOBJ: mGfxDef "data/gfx/96f/title_obj.bin"
+	; Altered
+	GFXDef_Title_Logo0: mGfxDef "data/gfx/96f/title_logo0.bin"
+	GFXDef_Title_Logo1: mGfxDef "data/gfx/96f/title_logo1.bin"
+	BG_Title_Logo: INCBIN "data/bg/96f/title_logo.bin"
+	; Remapped blank tiles from $01 to $00 due to graphical differences
+	BG_Title_Clouds: INCBIN "data/bg/96f/title_clouds.bin"
+	; Copyright year changed to 1996
+	GFXDef_TitleOBJ: mGfxDef "data/gfx/96f/title_obj.bin"
+ELIF VER_US
+	; Very minor touch up to the "G" tile compared to EN
+	GFXDef_Title_Logo0: mGfxDef "data/gfx/us/title_logo0.bin"
+	; Removed Laguna copyright
+	GFXDef_Title_Logo1: mGfxDef "data/gfx/us/title_logo1.bin"
+	BG_Title_Logo: INCBIN "data/bg/us/title_logo.bin"
+	; Remapped due to the removal of the copyright shifting the fire tiles up
+	BG_Title_Clouds: INCBIN "data/bg/us/title_clouds.bin"
+	GFXDef_TitleOBJ: mGfxDef "data/gfx/us/title_obj.bin"
 ELIF VER_EN
+	GFXDef_Title_Logo0: mGfxDef "data/gfx/en/title_logo0.bin"
+	GFXDef_Title_Logo1: mGfxDef "data/gfx/en/title_logo1.bin"
+	BG_Title_Logo: INCBIN "data/bg/en/title_logo.bin"
+	BG_Title_Clouds: INCBIN "data/bg/en/title_clouds.bin"
+	GFXDef_TitleOBJ: mGfxDef "data/gfx/en/title_obj.bin"
+ELSE
+	GFXDef_Title_Logo0: mGfxDef "data/gfx/title_logo0.bin"
+	GFXDef_Title_Logo1: mGfxDef "data/gfx/title_logo1.bin"
+	BG_Title_Logo: INCBIN "data/bg/title_logo.bin"
+	BG_Title_Clouds: INCBIN "data/bg/title_clouds.bin"
+	GFXDef_TitleOBJ: mGfxDef "data/gfx/title_obj.bin"
+ENDC	
 
-GFXDef_Title_Logo0: mGfxDef "data/gfx/en/title_logo0.bin"
-GFXDef_Title_Logo1: mGfxDef "data/gfx/en/title_logo1.bin"
-BG_Title_Logo: INCBIN "data/bg/en/title_logo.bin"
-BG_Title_Clouds: INCBIN "data/bg/en/title_clouds.bin"
-; IF VER_US
-;GFXDef_TitleOBJ: mGfxDef "data/gfx/us/title_obj.bin"
-; ELSE
-GFXDef_TitleOBJ: mGfxDef "data/gfx/en/title_obj.bin" ; /eu/
-; ENDC
-
+IF VER_EN
 ; English cutscene font, with lowercase characters.
 ; Meant to be used with TextPrinter_MultiFrameFar_*
 FontDef_Cutscene: 
@@ -1268,14 +1280,7 @@ FontDef_Cutscene:
 	; 1bpp font gfx
 .gfx:
 	INCBIN "data/gfx/en/cutscene_font.bin"
-
-ELSE
-GFXDef_Title_Logo0: mGfxDef "data/gfx/title_logo0.bin"
-GFXDef_Title_Logo1: mGfxDef "data/gfx/title_logo1.bin"
-BG_Title_Logo: INCBIN "data/bg/title_logo.bin"
-BG_Title_Clouds: INCBIN "data/bg/title_clouds.bin"
-GFXDef_TitleOBJ: mGfxDef "data/gfx/title_obj.bin"
-ENDC	
+ENDC
 
 Play_ColiBoxTbl: 
 	db $00,$00,$00,$00 ; $00
@@ -1364,6 +1369,8 @@ GFXDef_Intro_KyoBG1: mGfxDef "data/gfx/96f/intro_kyo_bg1.bin"
 ; =============== END OF BANK ===============
 ; Partial duplicate of GFXDef_Intro_KyoBG1 below
 	mIncJunk "../padding_96f/L1D7F8F"
+ELIF VER_US
+	mIncJunk "../padding_us/L1D7E93"
 ELIF VER_EN
 	mIncJunk "L1D7F53"
 ELSE

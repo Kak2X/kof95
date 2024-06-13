@@ -25,7 +25,11 @@ SECTION "Rst08", ROM0[$0008]
 SECTION "Rst10", ROM0[$0010]
 ;Rst_StopLCDOperation:
 	jp   StopLCDOperation
+IF VER_US
+	mIncJunk "../padding_us/L000013"
+ELSE
 	mIncJunk "L000013"
+ENDC
 
 ; =============== RESET VECTOR $18 ===============
 SECTION "Rst18", ROM0[$0018]
@@ -205,10 +209,12 @@ ELSE
 	db   "NETTOU KOF 95",$00,$00	; title
 ENDC
 	db   $00      		; DMG - classic gameboy
-IF REV_VER == VER_EU
-	db   $33,$38		; new license
+IF VER_US
+	db   "01"			; new license
+ELIF VER_EU
+	db   "38"			; new license
 ELSE
-	db   $41,$37		; new license
+	db   "A7"			; new license
 ENDC
 	db   $03      		; SGB flag: SGB capable
 	db   $01      		; cart type: MBC1
@@ -221,8 +227,9 @@ ELSE
 ENDC
 	db   $33      		; old license: SGB capable
 	db   $00      		; mask ROM version number
-	
-IF REV_VER == VER_EU
+IF VER_US
+	db   $DD      		; header check
+ELIF VER_EU
 	db   $D3      		; header check
 ELSE
 	db   $C7      		; header check
@@ -231,7 +238,9 @@ ENDC
 IF REV_VER == VER_96F
 	; Fake 96 forgets to update the header checksum, but the global checksum is ok
 	dw   $A527    		; global check
-ELIF REV_VER == VER_EU
+ELIF VER_US
+	dw   $1EE1    		; global check
+ELIF VER_EU
 	dw   $0FC5    		; global check
 ELSE
 	dw   $B7B2    		; global check
@@ -16427,7 +16436,7 @@ MoveInputS_CheckEasyMoveKeys:
 	
 ; =============== END OF BANK ===============
 ; Junk area below.
-IF REV_VER == VER_EU
+IF VER_EN
 	mIncJunk "L003F93"
 ELSE
 	; Contains various duplicates of the last few subroutines in the bank.

@@ -3680,7 +3680,11 @@ IF VER_EN
 	ld   c, $04
 	call TextPrinter_MultiFrameFar_AllowFast
 	call Task_PassControl_NoDelay
+IF VER_US
+	ld   b, $3C ; Only 1 sec, since it's a blank string in the US version
+ELSE
 	ld   b, $B4
+ENDC
 	call Cutscene03_PostTextWriteBlinkPic
 	call Cutscene03_ClearText
 	;--

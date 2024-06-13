@@ -605,6 +605,23 @@ TextDef_CutsceneRugalDefeatEn0:
 	db C_NL
 	db "Am I defeated again?"
 .end:
+IF VER_US
+; Blanked
+TextDef_CutsceneRugalDefeatEn1:
+	dw $9980
+	db .end-.start
+.start:
+	db " "
+.end:
+TextDef_CutsceneRugalDefeatEn2:
+	dw $9980
+	db .end-.start
+.start:
+	db "You did well,", C_NL
+	db " but rest assured", C_NL 
+	db " I shall return."
+.end:
+ELSE
 TextDef_CutsceneRugalDefeatEn1:
 	dw $9980
 	db .end-.start
@@ -620,6 +637,8 @@ TextDef_CutsceneRugalDefeatEn2:
 	db " the world requires", C_NL
 	db " myself."
 .end:
+ENDC
+
 TextDef_CutsceneRugalDefeatEn3:
 	dw $9980
 	db .end-.start
@@ -639,10 +658,17 @@ TextDef_CutsceneEpilogueEn:
 	db "          ", C_NL
 	db "And now,", C_NL
 	db C_NL
+IF VER_US
+	db " get ready for", C_NL
+	db C_NL
+	db " the next fight.", C_NL
+	db "                   ", C_NL
+ELSE
 	db "You make a step", C_NL
 	db C_NL
 	db " toward next fight.", C_NL
 	db "                   ", C_NL
+ENDC
 .end:
 TextDef_CutsceneNakoruruEn0:
 	dw $9980
@@ -806,8 +832,10 @@ GFX_Char_Kim_RyuuseiRanku2: INCBIN "data/gfx/char/kim_ryuuseiranku2.bin"
 GFX_Char_Kim_RyuuseiRanku3: INCBIN "data/gfx/char/kim_ryuuseiranku3.bin"
 GFX_Char_Kim_HouOuKyaku1: INCBIN "data/gfx/char/kim_hououkyaku1.bin"
 
-IF !VER_EN
 ; =============== END OF BANK ===============
 ; Junk area below.
+IF VER_US
+	mIncJunk "../padding_us/L157FDF"
+ELIF !VER_EN
 	mIncJunk "L157880"
 ENDC

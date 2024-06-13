@@ -360,13 +360,14 @@ IF VER_EN
 	ld   hl, TextDef_CreditsEnA_2
 	call TextPrinter_Instant
 	mDelayCredits $04, $08
-	
+IF VER_EU
 	; EN B (Laguna Staff)
 	ld   hl, TextDef_CreditsEnB_0
 	call TextPrinter_Instant
 	ld   hl, TextDef_CreditsEnB_1
 	call TextPrinter_Instant
 	mDelayCredits $04, $08
+ENDC
 ENDC
 	
 	; A
@@ -811,7 +812,9 @@ ENDC
 
 ; =============== END OF BANK ===============
 ; Junk area below.
-IF VER_EN
+IF VER_US
+	mIncJunk "../padding_us/L0A7D2F"
+ELIF VER_EN
 	mIncJunk "L0A7D40"
 ELSE
 	mIncJunk "L0A7D99"
