@@ -1204,7 +1204,7 @@ VBlank_ChkCopyPlTiles:
 ;
 ; If the tiles were not being copied, the player would be stuck.
 
-MAX_TILE_BUFFER_COPY EQU $03
+DEF MAX_TILE_BUFFER_COPY EQU $03
 
 ; =============== mVBlank_CopyPlTiles ===============
 ; Generates code to copy a player's graphics to VRAM.

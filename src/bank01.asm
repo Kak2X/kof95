@@ -3025,7 +3025,7 @@ Play_DoScrollPos:
 	; Note that, while we're updating wOBJScrollX and the checks are performed there
 	; this value will be directly copied to hScrollX.
 	;
-SCROLL_BORDER_H EQU $20
+DEF SCROLL_BORDER_H EQU $20
 	
 	;
 	; If both players aren't far enough (distance < $60), a simple border check can be made.
@@ -3129,8 +3129,8 @@ SCROLL_BORDER_H EQU $20
 	; However, the thresholds checked aren't directly $20px, since this is going off iOBJInfo_RelX.
 	; That value is offset to the right by OBJ_OFFSET_X, and as a result: 
 	;
-SCROLL_THRESHOLD_L EQU SCROLL_BORDER_H+OBJ_OFFSET_X
-SCROLL_THRESHOLD_R EQU SCREEN_H-(SCROLL_BORDER_H-OBJ_OFFSET_X)
+DEF SCROLL_THRESHOLD_L EQU SCROLL_BORDER_H+OBJ_OFFSET_X
+DEF SCROLL_THRESHOLD_R EQU SCREEN_H-(SCROLL_BORDER_H-OBJ_OFFSET_X)
 	
 	ld   a, [wOBJInfo_Pl1+iOBJInfo_RelX]
 	cp   SCROLL_THRESHOLD_L			; iOBJInfo_RelX < $28?

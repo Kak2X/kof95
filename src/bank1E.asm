@@ -3958,9 +3958,9 @@ CharSel_PrintCharName:
 ; Maps character IDs to cursor sprite positions.
 CharSel_CursorPosTable:
 IF VER_96F
-YOFFSET = $28 ; Shifted down
+DEF YOFFSET = $28 ; Shifted down
 ELSE
-YOFFSET = 0
+DEF YOFFSET = 0
 ENDC
 	db $00,$00+YOFFSET ; CHAR_ID_KYO     
 	db $18,$00+YOFFSET ; CHAR_ID_BENIMARU
@@ -3986,9 +3986,9 @@ ENDC
 ; The pointer for each character should always be equal to $99B3-(name length).
 CharSel_CharNameBGPtrTbl:
 IF VER_96F
-TOFFSET = -(BG_TILECOUNT_H*7) ; Shifted up 7 tiles
+DEF TOFFSET = -(BG_TILECOUNT_H*7) ; Shifted up 7 tiles
 ELSE
-TOFFSET = 0
+DEF TOFFSET = 0
 ENDC
 	dw $99B0+TOFFSET ; CHAR_ID_KYO     
 	dw $99AB+TOFFSET ; CHAR_ID_BENIMARU
@@ -4360,9 +4360,9 @@ ENDC
 ;
 CharSel_IdBGMapTbl:
 IF VER_96F
-TOFFSET = BG_TILECOUNT_H*5 ; 5 tiles down
+DEF TOFFSET = BG_TILECOUNT_H*5 ; 5 tiles down
 ELSE
-TOFFSET = 0
+DEF TOFFSET = 0
 ENDC
 	dw $9861+TOFFSET ; CHAR_ID_KYO     
 	dw $9864+TOFFSET ; CHAR_ID_BENIMARU

@@ -13,9 +13,9 @@ NEWCHARMAP intro
 
 ; [TCRF] The Japanese intro font was remapped from $40 to $00 for the English version.
 IF VER_EN
-TOFFSET = $00
+DEF TOFFSET = $00
 ELSE
-TOFFSET = $40
+DEF TOFFSET = $40
 ENDC
 	CHARMAP " ", TOFFSET + $00 
 	CHARMAP "1", TOFFSET + $01
@@ -665,5 +665,80 @@ NEWCHARMAP ascii
 	CHARMAP "↙", $06 ; ↙ ; Arrows ↓
 	CHARMAP "←", $07 ; ← ; Arrows ↓
 	CHARMAP "↖", $08 ; ↖ ; Arrows ↓
+	
+	; Normal ASCII
+	CHARMAP " ", $20
+	CHARMAP "!", $21
+	CHARMAP "\"", $22
+	CHARMAP "(", $28
+	CHARMAP ")", $29
+	CHARMAP "+", $2B
+	CHARMAP ",", $2C
+	CHARMAP ".", $2E
+	CHARMAP "0", $30
+	CHARMAP "1", $31
+	CHARMAP "2", $32
+	CHARMAP "3", $33
+	CHARMAP "4", $34
+	CHARMAP "5", $35
+	CHARMAP "6", $36
+	CHARMAP "7", $37
+	CHARMAP "8", $38
+	CHARMAP "9", $39
+	CHARMAP "?", $3F
+	
+	CHARMAP "A", $41
+	CHARMAP "B", $42
+	CHARMAP "C", $43
+	CHARMAP "D", $44
+	CHARMAP "E", $45
+	CHARMAP "F", $46
+	CHARMAP "G", $47
+	CHARMAP "H", $48
+	CHARMAP "I", $49
+	CHARMAP "J", $4A
+	CHARMAP "K", $4B
+	CHARMAP "L", $4C
+	CHARMAP "M", $4D
+	CHARMAP "N", $4E
+	CHARMAP "O", $4F
+	CHARMAP "P", $50
+	CHARMAP "Q", $51
+	CHARMAP "R", $52
+	CHARMAP "S", $53
+	CHARMAP "T", $54
+	CHARMAP "U", $55
+	CHARMAP "V", $56
+	CHARMAP "W", $57
+	CHARMAP "X", $58
+	CHARMAP "Y", $59
+	CHARMAP "Z", $5A
+	
 	CHARMAP "`", $60
+	CHARMAP "a", $61
+	CHARMAP "b", $62
+	CHARMAP "c", $63
+	CHARMAP "d", $64
+	CHARMAP "e", $65
+	CHARMAP "f", $66
+	CHARMAP "g", $67
+	CHARMAP "h", $68
+	CHARMAP "i", $69
+	CHARMAP "j", $6A
+	CHARMAP "k", $6B
+	CHARMAP "l", $6C
+	CHARMAP "m", $6D
+	CHARMAP "n", $6E
+	CHARMAP "o", $6F
+	CHARMAP "p", $70
+	CHARMAP "q", $71
+	CHARMAP "r", $72
+	CHARMAP "s", $73
+	CHARMAP "t", $74
+	CHARMAP "u", $75
+	CHARMAP "v", $76
+	CHARMAP "w", $77
+	CHARMAP "x", $78
+	CHARMAP "y", $79
+	CHARMAP "z", $7A
 POPC         

@@ -135,7 +135,7 @@ ENDM
 ; OUT
 ; - CHL: Calculated result
 MACRO mkhl
-CHL = (LOW(\1) << 8)|LOW(\2)
+DEF CHL = (LOW(\1) << 8)|LOW(\2)
 ENDM
 
 ; =============== mktid ===============
@@ -145,7 +145,7 @@ ENDM
 ; OUT
 ; - TID: Calculated result
 MACRO mktid
-TID = LOW(\1 >> 4)
+DEF TID = LOW(\1 >> 4)
 ENDM
 
 ; =============== Special move list definition macros ===============
@@ -213,8 +213,8 @@ ENDM
 ; - 2: Label to punch list
 ; - 3: Label to kick list
 ; - 4: Visibility flags
-CHKGA_KICK  EQU %1
-CHKGA_PUNCH EQU %10
+DEF CHKGA_KICK  EQU %1
+DEF CHKGA_PUNCH EQU %10
 MACRO mMvIn_ChkGA
 	; Determine the attack type/strength.
 	; This narrows down the list of special moves to check.
