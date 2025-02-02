@@ -4,10 +4,10 @@ SndHeader_SFX_Unused_DE:
 	db SIS_SFX|SIS_ENABLED ; Initial playback status
 	db SND_CH2_PTR ; Sound channel ptr
 	dw SndData_SFX_Unused_DE_Ch2 ; Data ptr
-	db $00 ; Base freq/note id
+	db 0 ; Initial fine tune
 	db $81 ; Unused
 SndData_SFX_Unused_DE_Ch2:
-	sndenv 14, SNDENV_DEC, 6 ;X
-	sndenach SNDOUT_CH2R|SNDOUT_CH2L ;X
-	sndnr21 3, 0 ;X
-	sndendch ;X
+	envelope $E6
+	panning $22
+	duty_cycle 3
+	chan_stop

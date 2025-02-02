@@ -2,7 +2,7 @@
 ; =============== START OF MODULE Sound ===============
 ;
 
-; =============== STUBS ===============
+; =============== INTERFACE ===============
 Sound_Do:
 	jp   Sound_Main_Do
 Sound_Init:
@@ -378,7 +378,7 @@ Sound_SndStartActionPtrTable:
 ; - BC: Ptr to song data
 Sound_StartNewBGM:
 	xor  a
-	ld   [wSnd_Unused_ChUsed], a
+	ld   [wSnd_Unused_SfxPriority], a
 	push bc
 		call Sound_StopAll
 	pop  bc
@@ -508,11 +508,11 @@ Sound_DoChSndInfo:
 	inc  hl
 	ld   e, [hl]			; E = iSndInfo_LengthTimerSub
 	
-	; DE += (wSndTimerIncSpeed << 8) + wSndTimerIncSpeedSub
+	; DE += (wSndSongSpeed << 8) + wSndSongSpeedSub
 	push hl				; Save iSndInfo_LengthTimerSub ptr
-		ld   a, [wSndTimerIncSpeedSub]	; L = Subframes to add
+		ld   a, [wSndSongSpeedSub]	; L = Subframes to add
 		ld   l, a
-		ld   a, [wSndTimerIncSpeed]		; H = Frames to add
+		ld   a, [wSndSongSpeed]		; H = Frames to add
 		ld   h, a
 		add  hl, de						; Add them over
 		ld   d, h						; DE = HL
@@ -688,16 +688,16 @@ Sound_DoChSndInfo_Loop:
 ; [TCRF] Half of these settings aren't used.
 .ch4FreqTbl:
 	;   42  43
-	db $00,$00
-	db $51,$36
-	db $52,$24
-	db $31,$21
-	db $53,$11
-	db $53,$11;X
-	db $53,$11;X
-	db $52,$36;X
-	db $52,$36;X
-	db $52,$36;X
+	db $00,$00 ; $80 ; B-6
+	db $51,$36 ; $81 ; F-5
+	db $52,$24 ; $82 ; B-5
+	db $31,$21 ; $83 ; Between C-6 & B-5
+	db $53,$11 ; $84 ; Between D#6 & E-6
+	db $53,$11 ; $85 ; Between D#6 & E-6 ;X
+	db $53,$11 ; $86 ; Between D#6 & E-6 ;X
+	db $52,$36 ; $87 ; F-5 ;X
+	db $52,$36 ; $88 ; F-5 ;X
+	db $52,$36 ; $89 ; F-5 ;X
 ;--
 
 .isCh123:
@@ -767,7 +767,7 @@ Sound_DoChSndInfo_Loop:
 	; If set, we won't be updating rNRx2 (C-1).
 	;
 
-	bit  SISB_SKIPNRx2, a			; ### Is the bit set?...
+	bit  SISB_LOCKNRx2, a			; ### Is the bit set?...
 
 	;
 	; Read out the current 1-byte register pointer from iSndInfo_RegPtr to C.
@@ -885,7 +885,7 @@ Sound_DoChSndInfo_Loop:
 .chkReinit:
 	; If we skipped the NRx2 update (volume + ...), return immediately
 	ld   a, [wSndInfoCur+iSndInfo_Status]
-	bit  SISB_SKIPNRx2, a
+	bit  SISB_LOCKNRx2, a
 	jp   nz, Sound_DoChSndInfo_End
 	
 	; Re-initialize the appropriate sound channel
@@ -1064,30 +1064,30 @@ Sound_CmdPtrTbl:
 	dw Sound_Unused_DecDataPtr;X			; $00
 	dw Sound_Unused_DecDataPtr;X
 	dw Sound_Unused_DecDataPtr;X
-	dw Sound_Cmd_EndCh_NoSet;X
+	dw Sound_Cmd_ChanStop_NoFadeChg;X
 	dw Sound_Cmd_WriteToNRx2
 	dw Sound_Cmd_JpFromLoop
 	dw Sound_Cmd_AddToBaseFreqId
 	dw Sound_Cmd_JpFromLoopByTimer
-	dw Sound_Cmd_Unused_WriteToNR10;X		; $08
-	dw Sound_Cmd_SetChEna
+	dw Sound_Cmd_WriteToNR10;X				; $08
+	dw Sound_Cmd_SetPanning
 	dw Sound_Unused_DecDataPtr;X
 	dw Sound_Unused_DecDataPtr;X
 	dw Sound_Cmd_Call
 	dw Sound_Cmd_Ret
 	dw Sound_Cmd_WriteToNRx1
-	dw Sound_Cmd_SetSkipNRx2
-	dw Sound_Cmd_Unused_ClrSkipNRx2;X		; $10
-	dw Sound_Cmd_Unknown_SetStat6
-	dw Sound_Cmd_Unknown_Unused_ClrStat6;X
+	dw Sound_Cmd_LockNRx2
+	dw Sound_Cmd_UnlockNRx2;X				; $10
+	dw Sound_Cmd_SetVibrato
+	dw Sound_Cmd_ClrVibrato;X
 	dw Sound_Cmd_SetWaveData
-	dw Sound_Cmd_EndCh
-	dw Sound_Cmd_Unused_SetCh3StopLength;X
-	dw Sound_Cmd_SetTimerIncSpeed
+	dw Sound_Cmd_ChanStop
+	dw Sound_Cmd_WriteToNR31;X
+	dw Sound_Cmd_SetSpeed
 	dw Sound_Unused_DecDataPtr;X
 	dw Sound_Unused_DecDataPtr;X			; $18
 	dw Sound_Unused_DecDataPtr;X
-	dw Sound_Cmd_SetLength
+	dw Sound_Cmd_ExtendNote
 	dw Sound_Unused_DecDataPtr;X
 	dw Sound_Unused_DecDataPtr;X
 	dw Sound_Unused_DecDataPtr;X
@@ -1102,30 +1102,32 @@ Sound_Unused_DecDataPtr:
 	dec  de
 	ret
 	
-; =============== Sound_Cmd_SetTimerIncSpeed ===============
-; Sets a new increment value for the tempo timer.
+; =============== Sound_Cmd_SetSpeed ===============
+; Sets a new song speed.
+; This is a global value, which affects every song played from this point on.
 ; Command data format:
-; - 0: Timer increment (subframes)
-; - 1: Timer increment (frames)
-Sound_Cmd_SetTimerIncSpeed:
+; - 0: Song speed (subframes)
+; - 1: Song speed (frames)
+Sound_Cmd_SetSpeed:
 	ld   a, [de]					; byte0
-	ld   [wSndTimerIncSpeedSub], a
+	ld   [wSndSongSpeedSub], a
 	inc  de
 	ld   a, [de]					; byte1
-	ld   [wSndTimerIncSpeed], a
+	ld   [wSndSongSpeed], a
 	ret  
 	
-; =============== Sound_Cmd_Unused_SetCh3StopLength ===============
+; =============== Sound_Cmd_WriteToNR31 ===============
 ; [TCRF] Unused subroutine.
-; Meant to set a new length for channel 3, but the code that handles it is not in this game.
+; Sets a new length value for channel 3 and applies it immediately.
 ; Command data format:
 ; - 0: New length value
-Sound_Cmd_Unused_SetCh3StopLength:
+Sound_Cmd_WriteToNR31:
 	; Read a value off the data ptr.
-	; wSnd_Unused_Ch3StopLength = ^(*DE)
+	; wSnd_Unused_Ch3DelayCut = ^(*DE)
+	; Unlike 96, this isn't read anywhere else, as NR31 isn't reset to the last written value when a new note starts.
 	ld   a, [de]
 	cpl  
-	ld   [wSnd_Unused_Ch3StopLength], a
+	ld   [wSnd_Unused_Ch3DelayCut], a
 	
 	; [POI] In 96, this checked for $FF instead, the result of xoring 0.
 	or   a
@@ -1147,29 +1149,29 @@ Sound_Cmd_AddToBaseFreqId:
 	ld   [hl], a			; Save it back
 	ret  
 	
-; =============== Sound_Cmd_Unknown_SetStat6 ===============
-; [TCRF] Debug bit? Why is this used?
-Sound_Cmd_Unknown_SetStat6:
-	; Set status flag 6. Is this used?
+; =============== Sound_Cmd_SetVibrato ===============
+; [TCRF] Enables vibrato in later versions of the driver, but does nothing here.
+;        Bizzarely used by the Game Over song.
+Sound_Cmd_SetVibrato:
+	; Enable the feature
 	ld   a, [wSndInfoCur+iSndInfo_Status]
-	set  SISB_UNUSED_6, a
+	set  SISB_VIBRATO, a
 	ld   [wSndInfoCur+iSndInfo_Status], a
 	
-	; Clear unknown value
+	; Rewind the data offset
 	xor  a
-	ld   [wSndInfoCur+iSndInfo_Unknown_Unused_0A], a
+	ld   [wSndInfoCur+iSndInfo_VibratoDataOffset], a
 	
 	; Don't increase data ptr
 	dec  de
 	ret  
 	
-; =============== Sound_Cmd_Unknown_Unused_ClrStat6 ===============
-; [TCRF] Unused subroutine. 
-;        Clears otherwise unused SndInfo field.
-Sound_Cmd_Unknown_Unused_ClrStat6:
-	; Clear status flag 6 
+; =============== Sound_Cmd_ClrVibrato ===============
+; [TCRF] Unused subroutine.
+;        Disables vibrato.
+Sound_Cmd_ClrVibrato:
 	ld   a, [wSndInfoCur+iSndInfo_Status]
-	res  SISB_UNUSED_6, a
+	res  SISB_VIBRATO, a
 	ld   [wSndInfoCur+iSndInfo_Status], a
 	
 	; Don't increase data ptr
@@ -1179,35 +1181,32 @@ Sound_Cmd_Unknown_Unused_ClrStat6:
 ; =============== Sound_Cmd_ClrSkipNRx2 ===============
 ; [TCRF] Unused subroutine.
 ;        Clears disable flag for NRx2 writes
-Sound_Cmd_Unused_ClrSkipNRx2:
+Sound_Cmd_UnlockNRx2:
 	ld   a, [wSndInfoCur+iSndInfo_Status]
-	res  SISB_SKIPNRx2, a
+	res  SISB_LOCKNRx2, a
 	ld   [wSndInfoCur+iSndInfo_Status], a
 
 	; Don't increase data ptr
 	dec  de
 	ret
-
 	
-; =============== Sound_Cmd_SetSkipNRx2 ===============
+; =============== Sound_Cmd_LockNRx2 ===============
 ; Sets disable flag for NRx2 writes
-Sound_Cmd_SetSkipNRx2:
+Sound_Cmd_LockNRx2:
 	ld   a, [wSndInfoCur+iSndInfo_Status]
-	set  SISB_SKIPNRx2, a
+	set  SISB_LOCKNRx2, a
 	ld   [wSndInfoCur+iSndInfo_Status], a
 
 	; Don't increase data ptr
 	dec  de
 	ret  
-
-
 	
-; =============== Sound_Cmd_SetLength ===============
-; Sets a new channel length target, which also resets the timer.
-; This doesn't return to the sync loop, unlike the other way to set the length.
+; =============== Sound_Cmd_ExtendNote ===============
+; Extends the current note without restarting it.
+; This doesn't return to the sync loop, since it counts as a note.
 ; Command data format:
 ; - 0: Length target
-Sound_Cmd_SetLength:
+Sound_Cmd_ExtendNote:
 
 	;
 	; The current data byte is a length target.
@@ -1237,12 +1236,13 @@ Sound_Cmd_SetLength:
 	; Save back changes
 	jp   Sound_DoChSndInfo_End
 	
-; =============== Sound_Cmd_SetChEna ===============
-; Sets a new "enabled channels" bitmask. The read value should only affect a single channel.
+; =============== Sound_Cmd_SetPanning ===============
+; Sets the channel's stereo panning.
+; Updates NR51, but the bits affected should only affect the current channel.
 ;
 ; Command data format:
-; - 0: Sound channels to enable
-Sound_Cmd_SetChEna:
+; - 0: Channels to enable
+Sound_Cmd_SetPanning:
 	; C = Enabled channels
 	ldh  a, [rNR51]
 	ld   c, a
@@ -1349,19 +1349,19 @@ Sound_Cmd_WriteToNRx1:
 	call Sound_WriteToReg
 	ret
 	
-; =============== Sound_Cmd_Unused_WriteToNR10 ===============
+; =============== Sound_Cmd_WriteToNR10 ===============
 ; [TCRF] Unused command.
 ; Writes the current sound channel data to rNR10 and updates the bookkeeping value.
 ;
 ; Command data format:
 ; - 0: Sound channel data for NR10
-Sound_Cmd_Unused_WriteToNR10:
+Sound_Cmd_WriteToNR10:
 
 	; Read sound channel data value to A
 	ld   a, [de]
 	
 	; Update the bookkeeping value
-	ld   [wSndInfoCur+iSndInfo_Unknown_Unused_NR10Data], a
+	ld   [wSndInfoCur+iSndInfo_RegNR10Data], a
 	
 	; Write to the sound register if possible
 	ld   c, LOW(rNR10)
@@ -1594,10 +1594,10 @@ Sound_IndexPtrTable:
 	ld   l, a
 	ret
 	
-; =============== Sound_Cmd_EndCh ===============
+; =============== Sound_Cmd_ChanStop ===============
 ; Called to permanently stop channel playback (ie: the song/sfx ended and didn't loop).
 ; This either stops the sound channel or resumes playback of the BGM.
-Sound_Cmd_EndCh:
+Sound_Cmd_ChanStop:
 
 	; [TCRF] Nothing ever reads this bit.
 	ld   a, [wSndFadeStatus]
@@ -1605,7 +1605,7 @@ Sound_Cmd_EndCh:
 	ld   [wSndFadeStatus], a
 	; Fall-through
 	
-Sound_Cmd_EndCh_NoSet:
+Sound_Cmd_ChanStop_NoFadeChg:
 
 	; Mute the sound channel if there isn't a SFX playing on here, for good measure.
 	; This isn't really needed.
@@ -1678,7 +1678,7 @@ Sound_Cmd_EndCh_NoSet:
 	jr   nz, .ch12		; If so, jump
 .ch4:					; Otherwise, we're processing ch4
 
-	inc  hl				; Seek to iSndInfo_Unknown_Unused_NR10Data
+	inc  hl				; Seek to iSndInfo_RegNR10Data
 	jr   .ch124_nrx2
 	
 .ch12:
@@ -1770,7 +1770,7 @@ Sound_Cmd_EndCh_NoSet:
 	;
 	
 	; A = iSndInfo_RegNRx2Data
-	inc  hl			; Seek to iSndInfo_Unknown_Unused_NR10Data
+	inc  hl			; Seek to iSndInfo_RegNR10Data
 	inc  hl			; Seek to iSndInfo_VolPredict
 	inc  hl			; Seek to iSndInfo_RegNRx2Data
 	ldi  a, [hl] 	; Read it
@@ -1960,7 +1960,7 @@ Sound_Init_Do:
 
 	; By default the timer increments by 1
 	ld   a, $01
-	ld   [wSndTimerIncSpeed], a
+	ld   [wSndSongSpeed], a
 	
 	;
 	; Clear channel registers.
@@ -2002,7 +2002,7 @@ Sound_StopAll:
 	ldh  [rNR50], a
 	
 	xor  a				; Reset counter
-	ld   [wSnd_Unused_ChUsed], a
+	ld   [wSnd_Unused_SfxPriority], a
 .initNR:
 	ld   a, $08			; Use downwards sweep for ch1 (standard)
 	ldh  [rNR10], a
@@ -2236,80 +2236,80 @@ Sound_Unused_UnpauseChPlayback_Do:
 ; Essentially these are "musical notes" ordered from lowest to highest.
 ; [POI] Not all of these are used.
 Sound_FreqDataTbl:
-	dw $0000
-	dw $002C;X
-	dw $009C;X
-	dw $0106;X
-	dw $016B;X
-	dw $01C9;X
-	dw $0223;X
-	dw $0277;X
-	dw $02C7
-	dw $0312;X
-	dw $0358
-	dw $039B
-	dw $03DA
-	dw $0416
-	dw $044E
-	dw $0483
-	dw $04B5
-	dw $04E5
-	dw $0511
-	dw $053C
-	dw $0563
-	dw $0589
-	dw $05AC
-	dw $05CE
-	dw $05ED
-	dw $060B
-	dw $0628
-	dw $0642
-	dw $065B
-	dw $0672
-	dw $0689
-	dw $069E
-	dw $06B2
-	dw $06C4
-	dw $06D6
-	dw $06E7
-	dw $06F7
-	dw $0705
-	dw $0714
-	dw $0721
-	dw $072D
-	dw $0739
-	dw $0744
-	dw $074F
-	dw $0759
-	dw $0762
-	dw $076B
-	dw $0773
-	dw $077B
-	dw $0783
-	dw $078A
-	dw $0790
-	dw $0797
-	dw $079D
-	dw $07A2
-	dw $07A7
-	dw $07AC
-	dw $07B1
-	dw $07B6
-	dw $07BA
-	dw $07BE
-	dw $07C1
-	dw $07C5
-	dw $07C8
-	dw $07CB;X
-	dw $07CE;X
-	dw $07D1;X
-	dw $07D4;X
-	dw $07D6;X
-	dw $07D9;X
-	dw $07DB;X
-	dw $07DD;X
-	dw $07DF;X
-	dw $07E1;X
+	dw $0000 ; N/A | $00 | $80 
+	dw $002C ; C-2 | $01 | $81 ;X
+	dw $009C ; C#2 | $02 | $82 ;X
+	dw $0106 ; D-2 | $03 | $83 ;X
+	dw $016B ; D#2 | $04 | $84 ;X
+	dw $01C9 ; E-2 | $05 | $85 ;X
+	dw $0223 ; F-2 | $06 | $86 ;X
+	dw $0277 ; F#2 | $07 | $87 ;X
+	dw $02C7 ; G-2 | $08 | $88
+	dw $0312 ; G#2 | $09 | $89 ;X
+	dw $0358 ; A-2 | $0A | $8A
+	dw $039B ; A#2 | $0B | $8B
+	dw $03DA ; B-2 | $0C | $8C
+	dw $0416 ; C-3 | $0D | $8D
+	dw $044E ; C#3 | $0E | $8E
+	dw $0483 ; D-3 | $0F | $8F
+	dw $04B5 ; D#3 | $10 | $90
+	dw $04E5 ; E-3 | $11 | $91
+	dw $0511 ; F-3 | $12 | $92
+	dw $053C ; F#3 | $13 | $93
+	dw $0563 ; G-3 | $14 | $94
+	dw $0589 ; G#3 | $15 | $95
+	dw $05AC ; A-3 | $16 | $96
+	dw $05CE ; A#3 | $17 | $97
+	dw $05ED ; B-3 | $18 | $98
+	dw $060B ; C-4 | $19 | $99
+	dw $0628 ; C#4 | $1A | $9A
+	dw $0642 ; D-4 | $1B | $9B
+	dw $065B ; D#4 | $1C | $9C
+	dw $0672 ; E-4 | $1D | $9D
+	dw $0689 ; F-4 | $1E | $9E
+	dw $069E ; F#4 | $1F | $9F
+	dw $06B2 ; G-4 | $20 | $A0
+	dw $06C4 ; G#4 | $21 | $A1
+	dw $06D6 ; A-4 | $22 | $A2
+	dw $06E7 ; A#4 | $23 | $A3
+	dw $06F7 ; B-4 | $24 | $A4
+	dw $0705 ; C-5 | $25 | $A5
+	dw $0714 ; C#5 | $26 | $A6
+	dw $0721 ; D-5 | $27 | $A7
+	dw $072D ; D#5 | $28 | $A8
+	dw $0739 ; E-5 | $29 | $A9
+	dw $0744 ; F-5 | $2A | $AA
+	dw $074F ; F#5 | $2B | $AB
+	dw $0759 ; G-5 | $2C | $AC
+	dw $0762 ; G#5 | $2D | $AD
+	dw $076B ; A-5 | $2E | $AE
+	dw $0773 ; A#5 | $2F | $AF
+	dw $077B ; B-5 | $30 | $B0
+	dw $0783 ; C-6 | $31 | $B1
+	dw $078A ; C#6 | $32 | $B2
+	dw $0790 ; D-6 | $33 | $B3
+	dw $0797 ; D#6 | $34 | $B4
+	dw $079D ; E-6 | $35 | $B5
+	dw $07A2 ; F-6 | $36 | $B6
+	dw $07A7 ; F#6 | $37 | $B7
+	dw $07AC ; G-6 | $38 | $B8
+	dw $07B1 ; G#6 | $39 | $B9
+	dw $07B6 ; A-6 | $3A | $BA
+	dw $07BA ; A#6 | $3B | $BB
+	dw $07BE ; B-6 | $3C | $BC
+	dw $07C1 ; C-7 | $3D | $BD
+	dw $07C5 ; C#7 | $3E | $BE
+	dw $07C8 ; D-7 | $3F | $BF
+	dw $07CB ; D#7 | $40 | $C0 ;X
+	dw $07CE ; E-7 | $41 | $C1 ;X
+	dw $07D1 ; F-7 | $42 | $C2 ;X
+	dw $07D4 ; F#7 | $43 | $C3 ;X
+	dw $07D6 ; G-7 | $44 | $C4 ;X
+	dw $07D9 ; G#7 | $45 | $C5 ;X
+	dw $07DB ; A-7 | $46 | $C6 ;X
+	dw $07DD ; A#7 | $47 | $C7 ;X
+	dw $07DF ; B-7 | $48 | $C8 ;X
+	dw $07E1 ; C-8 | $49 | $C9 ;X
 	
 ; =============== Sound_WaveSetPtrTable ===============
 ; Sets of Wave data for channel 3, copied directly to the rWave registers.

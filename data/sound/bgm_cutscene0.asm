@@ -4,677 +4,522 @@ SndHeader_BGM_Cutscene0:
 	db SIS_ENABLED ; Initial playback status
 	db SND_CH1_PTR ; Sound channel ptr
 	dw SndData_BGM_Cutscene0_Ch1 ; Data ptr
-	db $00 ; Base freq/note id
+	db 0 ; Initial fine tune
 	db $81 ; Unused
 .ch2:
 	db SIS_ENABLED ; Initial playback status
 	db SND_CH2_PTR ; Sound channel ptr
 	dw SndData_BGM_Cutscene0_Ch2 ; Data ptr
-	db $00 ; Base freq/note id
+	db 0 ; Initial fine tune
 	db $81 ; Unused
 .ch3:
 	db SIS_ENABLED ; Initial playback status
 	db SND_CH3_PTR ; Sound channel ptr
 	dw SndData_BGM_Cutscene0_Ch3 ; Data ptr
-	db $00 ; Base freq/note id
+	db 0 ; Initial fine tune
 	db $81 ; Unused
 .ch4:
 	db SIS_ENABLED ; Initial playback status
 	db SND_CH4_PTR ; Sound channel ptr
 	dw SndData_BGM_Cutscene0_Ch4 ; Data ptr
-	db $00 ; Base freq/note id
+	db 0 ; Initial fine tune
 	db $81 ; Unused
 SndData_BGM_Cutscene0_Ch1:
-	sndenv 11, SNDENV_DEC, 7
-	sndenach SNDOUT_CH1R|SNDOUT_CH1L
-	sndnr11 2, 0
-	sndtinc $00BA
+	envelope $B7
+	panning $11
+	duty_cycle 2
+	speed $00BA
 .main:
-	sndenv 9, SNDENV_DEC, 7
-	sndnote $1E
-	sndlen 48
-	sndnote $25
-	sndlen 36
-	sndnote $24
-	sndlen 96
-	sndnote $23
-	sndnote $1D
-	sndnote $00
-	sndlen 12
-	sndnote $1E
-	sndlen 48
-	sndnote $25
-	sndlen 36
-	sndnote $24
-	sndlen 96
-	sndnote $23
-	sndnote $29
-	sndnote $00
-	sndlen 12
-	sndnote $0D
-	sndnote $0D
-	sndlen 6
-	sndnote $00
-	sndnote $00
-	sndnote $17
-	sndnote $15
-	sndlen 12
-	sndnote $00
-	sndlen 42
-	sndenv 9, SNDENV_DEC, 1
-	sndnote $27
-	sndlen 6
-	sndnote $28
-	sndnote $28
-	sndnote $27
-	sndnote $28
-	sndnote $28
-	sndnote $27
-	sndnote $28
-	sndnote $28
-	sndnote $27
-	sndnote $28
-	sndnote $28
-	sndnote $27
-	sndnote $28
-	sndnote $28
-	sndnote $27
-	sndnote $28
-	sndenv 9, SNDENV_DEC, 7
-	sndnote $0D
-	sndlen 12
-	sndnote $0D
-	sndlen 6
-	sndnote $00
-	sndnote $00
-	sndnote $17
-	sndnote $15
-	sndlen 12
-	sndnote $00
-	sndlen 48
-	sndnote $00
-	sndlen 96
-	sndnote $0D
-	sndlen 12
-	sndnote $0D
-	sndlen 6
-	sndnote $00
-	sndnote $00
-	sndnote $17
-	sndnote $15
-	sndlen 12
-	sndnote $00
-	sndlen 42
-	sndenv 9, SNDENV_DEC, 1
-	sndnote $27
-	sndlen 6
-	sndnote $28
-	sndnote $28
-	sndnote $27
-	sndnote $28
-	sndnote $28
-	sndnote $27
-	sndnote $28
-	sndnote $28
-	sndnote $27
-	sndnote $28
-	sndnote $28
-	sndnote $27
-	sndnote $28
-	sndnote $28
-	sndnote $27
-	sndnote $28
-	sndenv 9, SNDENV_DEC, 7
-	sndnote $0D
-	sndlen 12
-	sndnote $0D
-	sndlen 6
-	sndnote $00
-	sndnote $00
-	sndnote $17
-	sndnote $15
-	sndlen 12
-	sndnote $00
-	sndlen 48
-	sndnote $00
-	sndlen 54
-	sndnote $12
-	sndlen 6
-	sndnote $15
-	sndnote $12
-	sndnote $15
-	sndnote $17
-	sndnote $19
-	sndnote $1E
-	sndnote $1E
-	sndlen 24
-	sndnote $23
-	sndlen 96
-	sndlenpre $0C
-	sndnote $21
-	sndnote $20
-	sndlen 24
-	sndnote $1F
-	sndnote $1E
-	sndnote $27
-	sndlen 96
-	sndlenpre $18
-	sndnote $26
-	sndnote $25
-	sndnote $1E
-	sndnote $23
-	sndlen 96
-	sndlenpre $0C
-	sndnote $21
-	sndnote $20
-	sndlen 24
-	sndnote $1F
-	sndnote $1E
-	sndnote $27
-	sndlen 96
-	sndlenpre $0C
-	sndnote $25
-	sndnote $2D
-	sndlen 24
-	sndnote $25
-	sndlen 96
-	sndlenpre $60
-	sndloop .main
+	envelope $97
+	note F_,4, 48
+	note C_,5, 36
+	note B_,4, 96
+	note A#,4
+	note E_,4
+	silence 12
+	note F_,4, 48
+	note C_,5, 36
+	note B_,4, 96
+	note A#,4
+	note E_,5
+	silence 12
+	note C_,3
+	note C_,3, 6
+	silence
+	silence
+	note A#,3
+	note G#,3, 12
+	silence 42
+	envelope $91
+	note D_,5, 6
+	note D#,5
+	note D#,5
+	note D_,5
+	note D#,5
+	note D#,5
+	note D_,5
+	note D#,5
+	note D#,5
+	note D_,5
+	note D#,5
+	note D#,5
+	note D_,5
+	note D#,5
+	note D#,5
+	note D_,5
+	note D#,5
+	envelope $97
+	note C_,3, 12
+	note C_,3, 6
+	silence
+	silence
+	note A#,3
+	note G#,3, 12
+	silence 48
+	silence 96
+	note C_,3, 12
+	note C_,3, 6
+	silence
+	silence
+	note A#,3
+	note G#,3, 12
+	silence 42
+	envelope $91
+	note D_,5, 6
+	note D#,5
+	note D#,5
+	note D_,5
+	note D#,5
+	note D#,5
+	note D_,5
+	note D#,5
+	note D#,5
+	note D_,5
+	note D#,5
+	note D#,5
+	note D_,5
+	note D#,5
+	note D#,5
+	note D_,5
+	note D#,5
+	envelope $97
+	note C_,3, 12
+	note C_,3, 6
+	silence
+	silence
+	note A#,3
+	note G#,3, 12
+	silence 48
+	silence 54
+	note F_,3, 6
+	note G#,3
+	note F_,3
+	note G#,3
+	note A#,3
+	note C_,4
+	note F_,4
+	note F_,4, 24
+	note A#,4, 96
+	continue 12
+	note G#,4
+	note G_,4, 24
+	note F#,4
+	note F_,4
+	note D_,5, 96
+	continue 24
+	note C#,5
+	note C_,5
+	note F_,4
+	note A#,4, 96
+	continue 12
+	note G#,4
+	note G_,4, 24
+	note F#,4
+	note F_,4
+	note D_,5, 96
+	continue 12
+	note C_,5
+	note G#,5, 24
+	note C_,5, 96
+	continue 96
+	snd_loop .main
 SndData_BGM_Cutscene0_Ch2:
-	sndenv 11, SNDENV_DEC, 7
-	sndenach SNDOUT_CH2L
-	sndnr21 1, 0
-.main:
-	sndenv 9, SNDENV_DEC, 7
-	sndnote $00
-	sndlen 1
-	sndnote $0D
-	sndlen 48
-	sndnote $19
-	sndlen 36
-	sndnote $18
-	sndlen 96
-	sndnote $17
-	sndnote $11
-	sndnote $00
-	sndlen 12
-	sndnote $0D
-	sndlen 48
-	sndnote $19
-	sndlen 36
-	sndnote $18
-	sndlen 96
-	sndnote $17
-	sndnote $1D
-	sndnote $00
-	sndlen 11
+	envelope $B7
+	panning $20
+	duty_cycle 1
 .loop1:
-	sndnote $00
-	sndlen 90
-	sndenv 9, SNDENV_DEC, 1
-	sndnote $24
-	sndlen 6
-	sndnote $25
-	sndnote $25
-	sndnote $24
-	sndnote $25
-	sndnote $25
-	sndnote $24
-	sndnote $25
-	sndnote $25
-	sndnote $24
-	sndnote $25
-	sndnote $25
-	sndnote $24
-	sndnote $25
-	sndnote $25
-	sndnote $24
-	sndnote $25
-	sndnote $00
-	sndlen 96
-	sndnote $00
-	sndloopcnt $01, 2, .loop1
-	sndenv 9, SNDENV_DEC, 7
-	sndnote $0D
-	sndlen 6
-	sndnote $00
-	sndlen 18
-	sndnote $00
-	sndlen 12
-	sndnote $16
-	sndnote $16
-	sndlen 36
-	sndnote $12
-	sndlen 12
-	sndnote $10
-	sndlen 36
-	sndlen 12
-	sndnote $0F
-	sndlen 24
-	sndnote $0E
-	sndnote $0D
-	sndnote $00
-	sndlen 12
-	sndnote $15
-	sndnote $16
-	sndlen 36
-	sndnote $12
-	sndlen 12
-	sndnote $10
-	sndlen 36
-	sndlen 12
-	sndnote $0F
-	sndlen 24
-	sndnote $0E
-	sndnote $0D
-	sndnote $00
-	sndlen 12
-	sndnote $15
-	sndnote $16
-	sndlen 36
-	sndnote $12
-	sndlen 12
-	sndnote $10
-	sndlen 36
-	sndlen 12
-	sndnote $0F
-	sndlen 24
-	sndnote $0E
-	sndnote $0D
-	sndnote $00
-	sndlen 12
-	sndnote $15
-	sndnote $16
-	sndlen 36
-	sndnote $12
-	sndlen 12
-	sndnote $10
-	sndlen 36
-	sndnote $12
-	sndlen 12
-	sndnote $13
-	sndlen 24
-	sndnote $14
-	sndlen 96
-	sndlenpre $60
-	sndloop .main
-	sndendch ;X
+	envelope $97
+	silence 1
+	note C_,3, 48
+	note C_,4, 36
+	note B_,3, 96
+	note A#,3
+	note E_,3
+	silence 12
+	note C_,3, 48
+	note C_,4, 36
+	note B_,3, 96
+	note A#,3
+	note E_,4
+	silence 11
+.main:
+	silence 90
+	envelope $91
+	note B_,4, 6
+	note C_,5
+	note C_,5
+	note B_,4
+	note C_,5
+	note C_,5
+	note B_,4
+	note C_,5
+	note C_,5
+	note B_,4
+	note C_,5
+	note C_,5
+	note B_,4
+	note C_,5
+	note C_,5
+	note B_,4
+	note C_,5
+	silence 96
+	silence
+	snd_loop .main, $01, 2
+	envelope $97
+	note C_,3, 6
+	silence 18
+	silence 12
+	note A_,3
+	note A_,3, 36
+	note F_,3, 12
+	note D#,3, 36
+	wait 12
+	note D_,3, 24
+	note C#,3
+	note C_,3
+	silence 12
+	note G#,3
+	note A_,3, 36
+	note F_,3, 12
+	note D#,3, 36
+	wait 12
+	note D_,3, 24
+	note C#,3
+	note C_,3
+	silence 12
+	note G#,3
+	note A_,3, 36
+	note F_,3, 12
+	note D#,3, 36
+	wait 12
+	note D_,3, 24
+	note C#,3
+	note C_,3
+	silence 12
+	note G#,3
+	note A_,3, 36
+	note F_,3, 12
+	note D#,3, 36
+	note F_,3, 12
+	note F#,3, 24
+	note G_,3, 96
+	continue 96
+	snd_loop .loop1
+SndData_Unused_0007D775:
+	chan_stop
 SndData_BGM_Cutscene0_Ch3:
-	sndenvch3 1
-	sndenach SNDOUT_CH3R
-	sndwave $03
+	wave_vol $C0
+	panning $04
+	wave_id $03
 .main:
-	sndwave $03
-	sndnote $12
-	sndlen 48
-	sndlen 12
-	sndnote $14
-	sndnote $15
-	sndnote $12
-	sndlen 60
-	sndnote $18
-	sndlen 12
-	sndnote $19
-	sndnote $1B
-	sndnote $12
-	sndlen 60
-	sndnote $17
-	sndlen 12
-	sndnote $19
-	sndnote $1A
-	sndnote $19
-	sndlen 24
-	sndnote $1A
-	sndlen 12
-	sndnote $17
-	sndnote $19
-	sndnote $15
-	sndnote $00
-	sndnote $00
-	sndlen 6
-	sndnote $11
-	sndnote $00
-	sndlen 12
-	sndloopcnt $01, 2, .main
-	sndwave $06
-	sndnote $12
-	sndlen 12
-	sndnote $12
-	sndlen 6
-	sndnote $00
-	sndnote $00
-	sndlen 72
-	sndnote $00
-	sndlen 54
-	sndnote $12
-	sndlen 6
-	sndnote $19
-	sndnote $17
-	sndnote $12
-	sndnote $17
-	sndnote $19
-	sndnote $1C
-	sndnote $12
-	sndlen 12
-	sndnote $12
-	sndlen 6
-	sndnote $00
-	sndnote $00
-	sndlen 72
-	sndnote $10
-	sndlen 54
-	sndnote $12
-	sndlen 6
-	sndnote $15
-	sndnote $12
-	sndnote $15
-	sndnote $17
-	sndnote $18
-	sndnote $19
-	sndnote $12
-	sndlen 12
-	sndnote $12
-	sndlen 6
-	sndnote $00
-	sndnote $00
-	sndlen 72
-	sndnote $00
-	sndlen 54
-	sndnote $12
-	sndlen 6
-	sndnote $19
-	sndnote $17
-	sndnote $12
-	sndnote $17
-	sndnote $19
-	sndnote $1C
-	sndnote $12
-	sndlen 12
-	sndnote $12
-	sndlen 6
-	sndnote $00
-	sndnote $00
-	sndlen 72
-	sndnote $00
-	sndlen 96
-	sndnote $12
-	sndlen 6
-	sndnote $00
-	sndlen 18
-	sndnote $00
-	sndlen 12
-	sndnote $1A
-	sndnote $1B
-	sndlen 36
-	sndnote $17
-	sndlen 12
-	sndnote $15
-	sndlen 36
-	sndlen 12
-	sndnote $14
-	sndlen 24
-	sndnote $13
-	sndnote $12
-	sndnote $00
-	sndlen 12
-	sndnote $1A
-	sndnote $1B
-	sndlen 36
-	sndnote $17
-	sndlen 12
-	sndnote $15
-	sndlen 36
-	sndlen 12
-	sndnote $14
-	sndlen 24
-	sndnote $13
-	sndnote $12
-	sndnote $00
-	sndlen 12
-	sndnote $1A
-	sndnote $1B
-	sndlen 36
-	sndnote $17
-	sndlen 12
-	sndnote $15
-	sndlen 36
-	sndlen 12
-	sndnote $14
-	sndlen 24
-	sndnote $13
-	sndnote $12
-	sndnote $00
-	sndlen 12
-	sndnote $1A
-	sndnote $1B
-	sndlen 36
-	sndnote $17
-	sndlen 12
-	sndnote $15
-	sndlen 36
-	sndnote $0B
-	sndlen 12
-	sndnote $0C
-	sndlen 24
-	sndnote $0D
-	sndlen 96
-	sndnote $00
-	sndlen 96
-	sndloop .main
-	sndendch ;X
+	wave_id $03
+	note F_,3, 48
+	wait 12
+	note G_,3
+	note G#,3
+	note F_,3, 60
+	note B_,3, 12
+	note C_,4
+	note D_,4
+	note F_,3, 60
+	note A#,3, 12
+	note C_,4
+	note C#,4
+	note C_,4, 24
+	note C#,4, 12
+	note A#,3
+	note C_,4
+	note G#,3
+	silence
+	silence 6
+	note E_,3
+	silence 12
+	snd_loop .main, $01, 2
+	wave_id $06
+	note F_,3, 12
+	note F_,3, 6
+	silence
+	silence 72
+	silence 54
+	note F_,3, 6
+	note C_,4
+	note A#,3
+	note F_,3
+	note A#,3
+	note C_,4
+	note D#,4
+	note F_,3, 12
+	note F_,3, 6
+	silence
+	silence 72
+	note D#,3, 54
+	note F_,3, 6
+	note G#,3
+	note F_,3
+	note G#,3
+	note A#,3
+	note B_,3
+	note C_,4
+	note F_,3, 12
+	note F_,3, 6
+	silence
+	silence 72
+	silence 54
+	note F_,3, 6
+	note C_,4
+	note A#,3
+	note F_,3
+	note A#,3
+	note C_,4
+	note D#,4
+	note F_,3, 12
+	note F_,3, 6
+	silence
+	silence 72
+	silence 96
+	note F_,3, 6
+	silence 18
+	silence 12
+	note C#,4
+	note D_,4, 36
+	note A#,3, 12
+	note G#,3, 36
+	wait 12
+	note G_,3, 24
+	note F#,3
+	note F_,3
+	silence 12
+	note C#,4
+	note D_,4, 36
+	note A#,3, 12
+	note G#,3, 36
+	wait 12
+	note G_,3, 24
+	note F#,3
+	note F_,3
+	silence 12
+	note C#,4
+	note D_,4, 36
+	note A#,3, 12
+	note G#,3, 36
+	wait 12
+	note G_,3, 24
+	note F#,3
+	note F_,3
+	silence 12
+	note C#,4
+	note D_,4, 36
+	note A#,3, 12
+	note G#,3, 36
+	note A#,2, 12
+	note B_,2, 24
+	note C_,3, 96
+	silence 96
+	snd_loop .main
+SndData_Unused_0007D821:
+	chan_stop
 SndData_BGM_Cutscene0_Ch4:
-	sndenach SNDOUT_CH4R|SNDOUT_CH4L
-	sndnotebase $10
-	sndenv 10, SNDENV_DEC, 1
+	panning $88
+	fine_tune 16
+	envelope $A1
 .main:
-	sndch4 8, 0, 1
-	sndlen 6
-	sndch4 8, 0, 0
-	sndlen 12
-	sndch4 8, 0, 3
-	sndlen 6
-	sndch4 8, 0, 2
-	sndch4 8, 0, 0
-	sndch4 8, 0, 3
-	sndch4 8, 0, 0
-	sndch4 8, 0, 1
-	sndlen 12
-	sndch4 8, 0, 3
-	sndch4 8, 0, 2
-	sndlen 6
-	sndch4 8, 0, 3
-	sndch4 8, 0, 2
-	sndch4 8, 0, 3
-	sndch4 8, 0, 1
-	sndch4 8, 0, 0
-	sndlen 12
-	sndch4 8, 0, 3
-	sndlen 6
-	sndch4 8, 0, 2
-	sndch4 8, 0, 0
-	sndch4 8, 0, 3
-	sndch4 8, 0, 0
-	sndch4 8, 0, 1
-	sndlen 12
-	sndch4 8, 0, 3
-	sndlen 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 2
-	sndlen 12
-	sndch4 8, 0, 1
-	sndch4 8, 0, 1
-	sndlen 6
-	sndch4 8, 0, 0
-	sndlen 12
-	sndch4 8, 0, 3
-	sndlen 6
-	sndch4 8, 0, 2
-	sndch4 8, 0, 0
-	sndch4 8, 0, 3
-	sndch4 8, 0, 0
-	sndch4 8, 0, 1
-	sndlen 12
-	sndch4 8, 0, 3
-	sndch4 8, 0, 2
-	sndlen 6
-	sndch4 8, 0, 3
-	sndch4 8, 0, 2
-	sndch4 8, 0, 3
-	sndch4 8, 0, 1
-	sndch4 8, 0, 0
-	sndlen 12
-	sndch4 8, 0, 3
-	sndlen 6
-	sndch4 8, 0, 2
-	sndch4 8, 0, 0
-	sndch4 8, 0, 3
-	sndch4 8, 0, 0
-	sndch4 8, 0, 1
-	sndlen 12
-	sndch4 8, 0, 1
-	sndch4 8, 0, 0
-	sndlen 6
-	sndch4 8, 0, 2
-	sndch4 8, 0, 0
-	sndlen 12
-	sndloopcnt $01, 2, .main
+	note4p $01, 6 ; envelope $51 ; note4 F_,5,0
+	note4p $00, 12 ; envelope $00 ; note4 B_,6,0
+	note4p $03, 6 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $02 ; envelope $52 ; note4 B_,5,0
+	note4p $00 ; envelope $00 ; note4 B_,6,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $00 ; envelope $00 ; note4 B_,6,0
+	note4p $01, 12 ; envelope $51 ; note4 F_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $02, 6 ; envelope $52 ; note4 B_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $02 ; envelope $52 ; note4 B_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $01 ; envelope $51 ; note4 F_,5,0
+	note4p $00, 12 ; envelope $00 ; note4 B_,6,0
+	note4p $03, 6 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $02 ; envelope $52 ; note4 B_,5,0
+	note4p $00 ; envelope $00 ; note4 B_,6,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $00 ; envelope $00 ; note4 B_,6,0
+	note4p $01, 12 ; envelope $51 ; note4 F_,5,0
+	note4p $03, 3 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $02, 12 ; envelope $52 ; note4 B_,5,0
+	note4p $01 ; envelope $51 ; note4 F_,5,0
+	note4p $01, 6 ; envelope $51 ; note4 F_,5,0
+	note4p $00, 12 ; envelope $00 ; note4 B_,6,0
+	note4p $03, 6 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $02 ; envelope $52 ; note4 B_,5,0
+	note4p $00 ; envelope $00 ; note4 B_,6,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $00 ; envelope $00 ; note4 B_,6,0
+	note4p $01, 12 ; envelope $51 ; note4 F_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $02, 6 ; envelope $52 ; note4 B_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $02 ; envelope $52 ; note4 B_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $01 ; envelope $51 ; note4 F_,5,0
+	note4p $00, 12 ; envelope $00 ; note4 B_,6,0
+	note4p $03, 6 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $02 ; envelope $52 ; note4 B_,5,0
+	note4p $00 ; envelope $00 ; note4 B_,6,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $00 ; envelope $00 ; note4 B_,6,0
+	note4p $01, 12 ; envelope $51 ; note4 F_,5,0
+	note4p $01 ; envelope $51 ; note4 F_,5,0
+	note4p $00, 6 ; envelope $00 ; note4 B_,6,0
+	note4p $02 ; envelope $52 ; note4 B_,5,0
+	note4p $00, 12 ; envelope $00 ; note4 B_,6,0
+	snd_loop .main, $01, 2
 .loop1:
-	sndch4 8, 0, 3
-	sndlen 6
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 4
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 4
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 4
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 4
-	sndch4 8, 0, 3
-	sndch4 8, 0, 2
-	sndch4 8, 0, 0
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 4
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 4
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 4
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 2
-	sndch4 8, 0, 1
-	sndlen 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 2
-	sndlen 6
-	sndch4 8, 0, 0
-	sndloopcnt $01, 3, .loop1
-	sndch4 8, 0, 3
-	sndlen 6
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 4
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 4
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 4
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 4
-	sndch4 8, 0, 3
-	sndch4 8, 0, 2
-	sndch4 8, 0, 0
-	sndch4 8, 0, 1
-	sndlen 12
-	sndch4 8, 0, 1
-	sndch4 8, 0, 3
-	sndlen 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 2
-	sndlen 12
-	sndch4 8, 0, 1
-	sndlen 6
-	sndch4 8, 0, 1
-	sndch4 8, 0, 2
-	sndch4 8, 0, 1
-	sndlen 12
-	sndch4 8, 0, 2
-	sndch4 8, 0, 2
+	note4p $03, 6 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $04 ; envelope $53 ; note4x $11 ; Nearest: A#,6,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $04 ; envelope $53 ; note4x $11 ; Nearest: A#,6,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $04 ; envelope $53 ; note4x $11 ; Nearest: A#,6,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $04 ; envelope $53 ; note4x $11 ; Nearest: A#,6,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $02 ; envelope $52 ; note4 B_,5,0
+	note4p $00 ; envelope $00 ; note4 B_,6,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $04 ; envelope $53 ; note4x $11 ; Nearest: A#,6,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $04 ; envelope $53 ; note4x $11 ; Nearest: A#,6,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $04 ; envelope $53 ; note4x $11 ; Nearest: A#,6,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $02 ; envelope $52 ; note4 B_,5,0
+	note4p $01, 3 ; envelope $51 ; note4 F_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $02, 6 ; envelope $52 ; note4 B_,5,0
+	note4p $00 ; envelope $00 ; note4 B_,6,0
+	snd_loop .loop1, $01, 3
+	note4p $03, 6 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $04 ; envelope $53 ; note4x $11 ; Nearest: A#,6,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $04 ; envelope $53 ; note4x $11 ; Nearest: A#,6,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $04 ; envelope $53 ; note4x $11 ; Nearest: A#,6,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $04 ; envelope $53 ; note4x $11 ; Nearest: A#,6,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $02 ; envelope $52 ; note4 B_,5,0
+	note4p $00 ; envelope $00 ; note4 B_,6,0
+	note4p $01, 12 ; envelope $51 ; note4 F_,5,0
+	note4p $01 ; envelope $51 ; note4 F_,5,0
+	note4p $03, 3 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $02, 12 ; envelope $52 ; note4 B_,5,0
+	note4p $01, 6 ; envelope $51 ; note4 F_,5,0
+	note4p $01 ; envelope $51 ; note4 F_,5,0
+	note4p $02 ; envelope $52 ; note4 B_,5,0
+	note4p $01, 12 ; envelope $51 ; note4 F_,5,0
+	note4p $02 ; envelope $52 ; note4 B_,5,0
+	note4p $02 ; envelope $52 ; note4 B_,5,0
 .loop2:
-	sndch4 8, 0, 1
-	sndlen 6
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 2
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 1
-	sndch4 8, 0, 3
-	sndch4 8, 0, 1
-	sndch4 8, 0, 3
-	sndch4 8, 0, 1
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 2
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 1
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 2
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndloopcnt $01, 4, .loop2
-	sndch4 8, 0, 3
-	sndlen 6
-	sndch4 8, 0, 3
-	sndch4 8, 0, 1
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 1
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 1
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 1
-	sndch4 8, 0, 3
-	sndch4 8, 0, 1
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 1
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 1
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 1
-	sndch4 8, 0, 3
-	sndch4 8, 0, 3
-	sndch4 8, 0, 1
-	sndloop .main
-	sndendch ;X
-
+	note4p $01, 6 ; envelope $51 ; note4 F_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $02 ; envelope $52 ; note4 B_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $01 ; envelope $51 ; note4 F_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $01 ; envelope $51 ; note4 F_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $01 ; envelope $51 ; note4 F_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $02 ; envelope $52 ; note4 B_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $01 ; envelope $51 ; note4 F_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $02 ; envelope $52 ; note4 B_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	snd_loop .loop2, $01, 4
+	note4p $03, 6 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $01 ; envelope $51 ; note4 F_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $01 ; envelope $51 ; note4 F_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $01 ; envelope $51 ; note4 F_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $01 ; envelope $51 ; note4 F_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $01 ; envelope $51 ; note4 F_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $01 ; envelope $51 ; note4 F_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $01 ; envelope $51 ; note4 F_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $01 ; envelope $51 ; note4 F_,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $03 ; envelope $31 ; note4x $21 ; Nearest: A#,5,0
+	note4p $01 ; envelope $51 ; note4 F_,5,0
+	snd_loop .main
+SndData_Unused_0007D905:
+	chan_stop

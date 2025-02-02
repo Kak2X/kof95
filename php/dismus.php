@@ -217,7 +217,7 @@ for ($chnum = $i = 0; $i < count($asmfile);) {
 			case 0x16:
 				$subframes = getdb($i++);
 				$frames = getdb($i);
-				out("sndtinc \${$frames}{$subframes}");
+				out("speed \${$frames}{$subframes}");
 				break;
 			case 0x1A:
 				$val = getdb($i);

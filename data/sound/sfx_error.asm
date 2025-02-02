@@ -4,13 +4,11 @@ SndHeader_SFX_Error:
 	db SIS_SFX|SIS_ENABLED ; Initial playback status
 	db SND_CH3_PTR ; Sound channel ptr
 	dw SndData_SFX_Error_Ch3 ; Data ptr
-	db $00 ; Base freq/note id
+	db 0 ; Initial fine tune
 	db $81 ; Unused
 SndData_SFX_Error_Ch3:
-	sndenvch3 1
-	sndenach SNDOUT_CH3R|SNDOUT_CH3L
-	sndwave $04
-	sndnote $1D
-	sndlen 48
-	sndendch
-
+	wave_vol $C0
+	panning $44
+	wave_id $04
+	note E_,4, 48
+	chan_stop

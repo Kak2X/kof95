@@ -30,18 +30,20 @@ DEF vBGBoxWin2P1            EQU $9C8C
 
 SECTION "Sound RAM", WRAM0[$C000]
 wSndSet                   :db ; EQU $C000 ; Request playback of this sound ID 
-wSndTimerIncSpeedSub      :db ; EQU $C001 ; Added to the song subframe timer (iSndInfo_LengthTimerSub) every frame.
-wSndTimerIncSpeed         :db ; EQU $C002 ; Added to the song timer (iSndInfo_LengthTimer) every frame.
+wSndSongSpeedSub          :db ; EQU $C001 ; Song speed (subframes). Added to the song subframe timer (iSndInfo_LengthTimerSub) every frame.
+wSndSongSpeed             :db ; EQU $C002 ; Song speed (frames). Added to the song timer (iSndInfo_LengthTimer) every frame.
 ; [TCRF] The game never uses the fade in/out functionality
 wSndFadeStatus            :db ; EQU $C003 ; Fade control
 wSndFadeTimer             :db ; EQU $C004 ; Fade timer. When it reaches the target, a sound channel gets muted.
 wSndFadeTarget            :db ; EQU $C005 ; Fade timer target.
 
-wSnd_Unused_ChUsed        :db ; EQU $C006 ; [TCRF] Bitmask intended to mark the used sound channels, but it doesn't in this game.
-wSnd_Unused_EnaChBGM      :db ; EQU $C007 ; [TCRF] Keeps track of the last rNR51 value used modified by a BGM SndInfo.
-wSnd_Unused_Ch3StopLength :db ; EQU $C008 ; [TCRF] Not used in this game
+; The following are leftovers of half-removed features, which won't work.
+; They work as intended in the KOF96 sound driver.
+wSnd_Unused_SfxPriority   :db ; EQU $C006
+wSnd_Unused_EnaChBGM      :db ; EQU $C007
+wSnd_Unused_Ch3DelayCut   :db ; EQU $C008
 
-db
+ds 1
 
 wSndChProcLeft          :db     ; EQU $C00A ; Number of remaining wBGMCh*Info/wSFXCh*Info structs to process
 wSndInfoCur             :ds $20 ; EQU $C00B ; Current channel playback struct
@@ -770,14 +772,14 @@ DEF iSndInfo_RegPtr                    EQU $01 ; Determines sound channel. Alway
 DEF iSndInfo_DataPtr_Low               EQU $02 ; Pointer to song data (low byte)
 DEF iSndInfo_DataPtr_High              EQU $03 ; Pointer to song data (high byte)
 DEF iSndInfo_FreqDataIdBase            EQU $04 ; Base index/note id to Sound_FreqDataTbl for indexes > 0
-DEF iSndInfo_Unused05                  EQU $05 ; Unused. Always $81 unless audio is interrupted.
+DEF iSndInfo_VibratoId                 EQU $05 ; [TCRF] Unimplemented. In later versions, it's the id of the vibrato set loaded. 
 DEF iSndInfo_DataPtrStackIdx           EQU $06 ; Stack index for data pointers saved and restored by Sound_Cmd_Call and Sound_Cmd_Ret. Initialized to $20 (end of SndInfo) and decremented on pushes.
 DEF iSndInfo_LengthTarget              EQU $07 ; Handles delays -- the current sound register settings are kept until it matches iSndInfo_LengthTarget Set by song data.
 DEF iSndInfo_LengthTimer               EQU $08 ; Increases every time a SndInfo isn't paused/disabled. Once it reaches iSndInfo_LengthTarget it resets.
 DEF iSndInfo_LengthTimerSub            EQU $09 ; Subframe timer for the above.
-DEF iSndInfo_Unknown_Unused_0A         EQU $0A ; Unknown, only used in an unused command.
+DEF iSndInfo_VibratoDataOffset         EQU $0A ; [TCRF] Unimplemented. In later versions, it's an offset to the current vibrato table.
 DEF iSndInfo_RegNRx1Data               EQU $0B ; Last value written to rNR*1 | $FF00+(iSndInfo_RegPtr-2). Only written by Command IDs -- this isn't updated by the standard Sound_UpdateCustomRegs.
-DEF iSndInfo_Unknown_Unused_NR10Data   EQU $0C ; Last value written to NR10 by the unused sound command Sound_Cmd_Unused_WriteToNR10.
+DEF iSndInfo_RegNR10Data               EQU $0C ; [TCRF] Last value written to NR10 by the unused sound command Sound_Cmd_WriteToNR10.
 DEF iSndInfo_VolPredict                EQU $0D ; "Volume timer" which predicts the effective volume level (due to sweeps) at any given frame, used when restoring BGM playback. Low nybble is the timer, upper nybble is the predicted volume.
 DEF iSndInfo_RegNRx2Data               EQU $0E ; Last value written to rNR*2 | $FF00+(iSndInfo_RegPtr-1)
 DEF iSndInfo_RegNRx3Data               EQU $0F ; Last value written to rNR*3 | $FF00+(iSndInfo_RegPtr)

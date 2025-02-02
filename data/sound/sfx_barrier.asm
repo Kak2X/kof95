@@ -4,29 +4,28 @@ SndHeader_SFX_Barrier:
 	db SIS_SFX|SIS_ENABLED ; Initial playback status
 	db SND_CH4_PTR ; Sound channel ptr
 	dw SndData_SFX_Barrier_Ch4 ; Data ptr
-	db $00 ; Base freq/note id
+	db 0 ; Initial fine tune
 	db $81 ; Unused
 SndData_SFX_Barrier_Ch4:
-	sndenv 15, SNDENV_DEC, 7
-	sndenach SNDOUT_CH4R|SNDOUT_CH4L
-	sndch4 2, 0, 7
-	sndlen 3
-	sndch4 2, 0, 6
-	sndlen 3
-	sndch4 2, 0, 5
-	sndlen 3
-	sndch4 2, 0, 4
-	sndlen 3
-	sndch4 2, 0, 3
-	sndlen 3
-	sndch4 2, 0, 2
-	sndlen 3
-	sndch4 2, 0, 1
-	sndlen 3
-	sndch4 2, 0, 0
-	sndlen 5
-	sndenv 15, SNDENV_DEC, 1
-	sndch4 4, 0, 0
-	sndlen 6
-	sndendch
-
+	envelope $F7
+	panning $88
+	wait 39
+	wait 3
+	wait 38
+	wait 3
+	wait 37
+	wait 3
+	wait 36
+	wait 3
+	wait 35
+	wait 3
+	wait 34
+	wait 3
+	wait 33
+	wait 3
+	wait 32
+	wait 5
+	envelope $F1
+	wait 64
+	wait 6
+	chan_stop

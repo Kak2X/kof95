@@ -4,23 +4,22 @@ SndHeader_SFX_Light:
 	db SIS_SFX|SIS_ENABLED ; Initial playback status
 	db SND_CH4_PTR ; Sound channel ptr
 	dw SndData_SFX_Light_Ch4 ; Data ptr
-	db $00 ; Base freq/note id
+	db 0 ; Initial fine tune
 	db $81 ; Unused
 SndData_SFX_Light_Ch4:
-	sndenv 14, SNDENV_DEC, 4
-	sndenach SNDOUT_CH4R|SNDOUT_CH4L
-	sndch4 5, 1, 0
-	sndlen 2
-	sndsetskip
-	sndch4 5, 1, 1
-	sndlen 1
-	sndch4 5, 1, 2
-	sndlen 1
-	sndch4 5, 1, 3
-	sndlen 1
-	sndch4 5, 1, 4
-	sndlen 1
-	sndch4 5, 1, 5
-	sndlen 1
-	sndendch
-
+	envelope $E4
+	panning $88
+	wait 88
+	wait 2
+	lock_envelope
+	wait 89
+	wait 1
+	wait 90
+	wait 1
+	wait 91
+	wait 1
+	wait 92
+	wait 1
+	wait 93
+	wait 1
+	chan_stop

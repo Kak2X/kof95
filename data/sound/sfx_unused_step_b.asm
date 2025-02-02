@@ -4,28 +4,24 @@ SndHeader_SFX_Unused_StepB:
 	db SIS_SFX|SIS_ENABLED ; Initial playback status
 	db SND_CH4_PTR ; Sound channel ptr
 	dw SndData_SFX_Unused_StepB_Ch4 ; Data ptr
-	db $00 ; Base freq/note id
+	db 0 ; Initial fine tune
 	db $81 ; Unused
 SndData_SFX_Unused_StepB_Ch4:
-	sndenv 15, SNDENV_DEC, 5
-	sndenach SNDOUT_CH4R|SNDOUT_CH4L
-	sndch4 4, 0, 4
-	sndlen 1
-	sndch4 5, 0, 7
-	sndlen 1
-	sndch4 8, 0, 0
-	sndlen 2
-	sndch4 4, 0, 5
-	sndlen 1
-	sndch4 5, 1, 0
-	sndlen 1
-	sndch4 8, 0, 0
-	sndlen 1
-	sndch4 4, 0, 6
-	sndlen 1
-	sndch4 5, 1, 1
-	sndlen 1
-	sndch4 8, 0, 0
-	sndlen 2
-	sndendch
-
+	envelope $F5
+	panning $88
+	wait 68
+	wait 1
+	wait 87
+	wait 1
+	note4x $80, 2 ; Nearest: B_,3,0
+	wait 69
+	wait 1
+	wait 88
+	wait 1
+	note4x $80, 1 ; Nearest: B_,3,0
+	wait 70
+	wait 1
+	wait 89
+	wait 1
+	note4x $80, 2 ; Nearest: B_,3,0
+	chan_stop

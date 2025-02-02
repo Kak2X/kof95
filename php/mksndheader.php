@@ -18,12 +18,12 @@ $h = fopen("tempconv.asm", 'w');
 
 $bit_status = [
 	0 => "SIS_PAUSE",
-	1 => "SIS_SKIPNRx2",
+	1 => "SIS_LOCKNRx2",
 	2 => "SIS_USEDBYSFX",
 	3 => "SIS_SFX",
 	4 => "SIS_UNK_4",
 	5 => "SIS_UNK_5",
-	6 => "SIS_UNUSED_6",
+	6 => "SIS_VIBRATO",
 	7 => "SIS_ENABLED",
 ];
 $sndptr_map = [

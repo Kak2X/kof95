@@ -4,15 +4,14 @@ SndHeader_SFX_Jump:
 	db SIS_SFX|SIS_ENABLED ; Initial playback status
 	db SND_CH4_PTR ; Sound channel ptr
 	dw SndData_SFX_Jump_Ch4 ; Data ptr
-	db $00 ; Base freq/note id
+	db 0 ; Initial fine tune
 	db $81 ; Unused
 SndData_SFX_Jump_Ch4:
-	sndenv 1, SNDENV_INC, 1
-	sndenach SNDOUT_CH4R|SNDOUT_CH4L
-	sndch4 4, 1, 0
-	sndlen 3
-	sndenv 15, SNDENV_DEC, 1
-	sndch4 4, 0, 0
-	sndlen 6
-	sndendch
-
+	envelope $19
+	panning $88
+	wait 72
+	wait 3
+	envelope $F1
+	wait 64
+	wait 6
+	chan_stop
