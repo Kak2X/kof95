@@ -9,17 +9,11 @@ SndHeader_SFX_ProjLg:
 SndData_SFX_ProjLg_Ch4:
 	envelope $F7
 	panning $88
-	wait 84
-	wait 3
-	wait 83
-	wait 3
-	wait 82
-	wait 3
-	wait 81
-	wait 3
-	wait 80
-	wait 5
+	note4 B_,4,0, 3
+	note4x $53, 3 ; Nearest: G#,4,0
+	note4x $52, 3 ; Nearest: A_,4,0
+	note4x $51, 3 ; Nearest: A#,4,0
+	note4x $50, 5 ; Nearest: B_,4,0
 	envelope $F1
-	wait 64
-	wait 4
+	note4x $40, 4 ; Nearest: B_,5,0
 	chan_stop

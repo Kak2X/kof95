@@ -9,19 +9,13 @@ SndHeader_SFX_Unused_StepB:
 SndData_SFX_Unused_StepB_Ch4:
 	envelope $F5
 	panning $88
-	wait 68
-	wait 1
-	wait 87
-	wait 1
+	note4 D#,5,0, 1
+	note4 G#,4,0, 1
 	note4x $80, 2 ; Nearest: B_,3,0
-	wait 69
-	wait 1
-	wait 88
-	wait 1
+	note4 D_,5,0, 1
+	note4x $58, 1 ; Nearest: B_,4,1
 	note4x $80, 1 ; Nearest: B_,3,0
-	wait 70
-	wait 1
-	wait 89
-	wait 1
+	note4 C#,5,0, 1
+	note4x $59, 1 ; Nearest: A#,4,1
 	note4x $80, 2 ; Nearest: B_,3,0
 	chan_stop

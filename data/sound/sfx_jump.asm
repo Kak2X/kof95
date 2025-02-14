@@ -9,9 +9,7 @@ SndHeader_SFX_Jump:
 SndData_SFX_Jump_Ch4:
 	envelope $19
 	panning $88
-	wait 72
-	wait 3
+	note4x $48, 3 ; Nearest: B_,5,1
 	envelope $F1
-	wait 64
-	wait 6
+	note4x $40, 6 ; Nearest: B_,5,0
 	chan_stop

@@ -9,16 +9,10 @@ SndHeader_SFX_FireHit:
 SndData_SFX_FireHit_Ch4:
 	envelope $F4
 	panning $88
-	wait 68
-	wait 6
-	wait 87
-	wait 6
-	wait 83
-	wait 6
-	wait 71
-	wait 6
-	wait 83
-	wait 6
-	wait 100
-	wait 55
+	note4 D#,5,0, 6
+	note4 G#,4,0, 6
+	note4x $53, 6 ; Nearest: G#,4,0
+	note4 C_,5,0, 6
+	note4x $53, 6 ; Nearest: G#,4,0
+	note4 G_,4,0, 55
 	chan_stop

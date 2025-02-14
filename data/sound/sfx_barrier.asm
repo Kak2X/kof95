@@ -9,23 +9,14 @@ SndHeader_SFX_Barrier:
 SndData_SFX_Barrier_Ch4:
 	envelope $F7
 	panning $88
-	wait 39
-	wait 3
-	wait 38
-	wait 3
-	wait 37
-	wait 3
-	wait 36
-	wait 3
-	wait 35
-	wait 3
-	wait 34
-	wait 3
-	wait 33
-	wait 3
-	wait 32
-	wait 5
+	note4 G#,5,0, 3
+	note4 A_,5,0, 3
+	note4 A#,5,0, 3
+	note4 B_,5,0, 3
+	note4x $23, 3 ; Nearest: G#,5,0
+	note4x $22, 3 ; Nearest: A_,5,0
+	note4x $21, 3 ; Nearest: A#,5,0
+	note4x $20, 5 ; Nearest: B_,5,0
 	envelope $F1
-	wait 64
-	wait 6
+	note4x $40, 6 ; Nearest: B_,5,0
 	chan_stop

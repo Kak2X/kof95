@@ -9,17 +9,11 @@ SndHeader_SFX_Light:
 SndData_SFX_Light_Ch4:
 	envelope $E4
 	panning $88
-	wait 88
-	wait 2
+	note4x $58, 2 ; Nearest: B_,4,1
 	lock_envelope
-	wait 89
-	wait 1
-	wait 90
-	wait 1
-	wait 91
-	wait 1
-	wait 92
-	wait 1
-	wait 93
-	wait 1
+	note4x $59, 1 ; Nearest: A#,4,1
+	note4x $5A, 1 ; Nearest: A_,4,1
+	note4x $5B, 1 ; Nearest: G#,4,1
+	note4 B_,4,1, 1
+	note4 A#,4,1, 1
 	chan_stop

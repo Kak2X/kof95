@@ -9,9 +9,8 @@ SndHeader_SFX_Reflect:
 SndData_SFX_Reflect_Ch4:
 	envelope $F6
 	panning $88
-	wait 64
-	wait 6
+	note4x $40, 6 ; Nearest: B_,5,0
 	envelope $F1
-	wait 112
-	wait 18
+	note4x $70, 18 ; Nearest: B_,4,0
 	chan_stop
+

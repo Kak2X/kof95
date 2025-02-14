@@ -9,12 +9,9 @@ SndHeader_SFX_Step:
 SndData_SFX_Step_Ch4:
 	envelope $29
 	panning $88
-	wait 64
-	wait 2
+	note4x $40, 2 ; Nearest: B_,5,0
 	envelope $F1
 	lock_envelope
-	wait 66
-	wait 1
-	wait 67
-	wait 1
+	note4x $42, 1 ; Nearest: A_,5,0
+	note4x $43, 1 ; Nearest: G#,5,0
 	chan_stop

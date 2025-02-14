@@ -9,8 +9,6 @@ SndHeader_SFX_Block:
 SndData_SFX_Block_Ch4:
 	envelope $F1
 	panning $88
-	wait 68
-	wait 5
-	wait 86
-	wait 2
+	note4 D#,5,0, 5
+	note4 A_,4,0, 2
 	chan_stop
